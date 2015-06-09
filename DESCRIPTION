@@ -1,10 +1,11 @@
-Package: HTestimate
+Package: htEstimate
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Horvitz-Thompson Estimate
 Version: 0.1
 Date: 2015-06-07
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
+Author: Joel Middleton and Chris Kennedy
+Maintainer: Chris Kennedy <chrisken@gmail.com>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
+Suggests: testthat
