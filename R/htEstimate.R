@@ -25,7 +25,8 @@ createProbMatrix = function(assignments, byrow = F) {
   result = matrix(nrow = n*k, ncol=n*k)
   #cat("Result dimensions:", n*k, "by", n*k, "\n")
 
-  # Create the diagonals and upper triangle.
+  # Create the diagonals and lower triangle.
+  # We start at the top-left diagonal and work down the column.
   for (col in 1:k) {
     for (row in col:k) {
       # Starting row & col in the matrix.
@@ -40,7 +41,7 @@ createProbMatrix = function(assignments, byrow = F) {
     }
   }
 
-  # Copy upper triangle to the lower triangle.
+  # Copy lower triangle to the upper triangle.
 
   # Return the result.
   return(result)
