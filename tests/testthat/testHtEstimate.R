@@ -24,3 +24,4 @@ assignment = testmat1[, rand_column]
 
 # Compare assignment 1 to assignment 2.
 result = htEstimate(outcome, assignment, c(1, -1, 0), probs)
+result

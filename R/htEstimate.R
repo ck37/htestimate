@@ -104,7 +104,64 @@ generateAssignmentProbs = function(row, col, assignments, assign_levels) {
 #' @return estimate, standard_error, p value (two-tailed test of null)
 #' @examples
 #' TBD
-htEstimate = function(outcome, assignment, contrasts, prob_matrix, approx = "youngs", totals = F) {
-  result = list(estimate=NA, std_err=NA, p=NA)
+htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs", totals = F) {
+
+  # Prepare some basic variables.
+
+  # We sort the assignment levels in ascending order in case they are not consecutive natural numbers.
+  assignment_levels = sort(unique(raw_assignment))
+
+  # Create a dictionary mapping the raw assignment to the clean assignment levels.
+  #assign_dict = list()
+  #for (i in 1:length(assignment_levels)) {
+  #  # assign_dict = assignment_levels[assignment_levels %in% assignment_levels]
+  #  assign_dict[[assignment_levels[i]]] = i
+ # }
+
+  # Now create a clean_assignment field with consecutive natural numbers.
+ # clean_assignment = assign_dict[[assignment]]
+
+  # For now, just assume that all assignments are consecutive natural numbers (1:k).
+  assignment = raw_assignment
+
+  # K is the number of unique assignment values.
+  k = length(assignment_levels)
+
+  # N is the number of units.
+  n = length(assignment)
+
+  # 1. Calculate the effect estimate.
+
+  # For each assignment, scale the outcomes of units with that assignment by the inverse of their
+  # probability of assignment (on the diagonal matrix), generating a total for that outcome.
+
+  outcome_totals = rep(NA, k)
+
+  # Determine the location of the weights in the probability matrix.
+  # We just need to identify the row because the column will be the same.
+  weight_rows = c()
+  for (i in 1:n) {
+    weight_rows[i] = 1 + (i - 1) * n + (assignment[i] - 1)
+  }
+
+  # Loop over each assignment level.
+  for (i in 1:k) {
+    assignment_level = assignment_levels[i]
+    weights = prob_matrix[weight_rows[assignment == assignment_level], weight_rows[assignment == assignment_level]]
+
+    # Calculate the inverse-probability weighted total.
+    outcome_totals[i] = outcome[assignment == assignment_level] / weights
+  }
+
+  # Then weight those outcomes by the contrast weightings, computing the sum, and divide by N.
+  estimate = sum(outcome_totals * contrasts) / n
+
+  # 2. Calculate the SE.
+
+
+  # 3. Calculate the probability.
+
+  # Return the results.
+  result = list(estimate=estimate, std_err=NA, p=NA)
   return(result)
 }
