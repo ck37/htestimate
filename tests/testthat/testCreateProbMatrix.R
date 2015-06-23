@@ -36,3 +36,7 @@ context("Diagonal")
 
 context("Off-Diagonal")
 # Check that the off-diagonal results are correct.
+
+# Check lower triangle.
+
+# Confirm that base matrix is symmetric.
