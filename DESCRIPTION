@@ -3,7 +3,7 @@ Type: Package
 Title: Horvitz-Thompson Estimate
 Version: 0.1
 Date: 2015-06-07
-Author: Joel Middleton and Chris Kennedy
+Author: Chris Kennedy and Joel Middleton
 Maintainer: Chris Kennedy <chrisken@gmail.com>
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
