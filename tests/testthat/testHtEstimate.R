@@ -11,16 +11,20 @@ testmat1_n = length(arms1)
 testmat1_k = length(unique(arms1))
 
 # Check that a simple test case works.
-context("Dimensions")
+context("Simple test case")
 
 probs = createProbMatrix(testmat1)
+probs
 
 set.seed(4976401)
 # Create sample outcome vector.
 outcome = rnorm(testmat1_n)
+outcome
+
 # Choose an assignment vector for one of the permutations.
 rand_column = sample(ncol(testmat1), 1)
 assignment = testmat1[, rand_column]
+assignment
 
 # Compare assignment 1 to assignment 2.
 result = htEstimate(outcome, assignment, c(1, -1, 0), probs)
