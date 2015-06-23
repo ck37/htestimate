@@ -1,4 +1,4 @@
-#' @title Probabilities and joint probailities of assignment.
+#' @title Probabilities and joint probabilities of assignment.
 #'
 #' @description Return a matrix of probabilities and joint probabilities of assignment for n
 #' observations and k randomization replications.
@@ -69,7 +69,7 @@ createProbMatrix = function(assignments, byrow = F) {
 }
 
 getRawMatrixEntries = function(row, col, n) {
-  # Starting row & col in the matrix.
+  # Starting row & col in the full matrix.
   start_row = 1 + (row - 1)  * n
   end_row = start_row + n - 1
   start_col = 1 + (col - 1) * n
@@ -94,6 +94,17 @@ generateAssignmentProbs = function(row, col, assignments, assign_levels) {
   return(probs)
 }
 
+#' @title Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals and hypothesis tests.
+#'
+#' @description TBD
+#'
+#' @param outcome Outcome vector for a given experiment.
+#' @param assignment Assignment vector for the experiment.
+#' @param contrasts A list of contasts. For example could be c(-1, 1, 0) for the above example if we wanted to compare treatment 1 to treatment 2. But in a factorial design, for example, we might want to compute the AMCE (see Hainmueller et al.). For example, if we had a 2⇥2⇥2 factorial design (8 treatment arms) and we wanted to look at an AMCE we might specify c(0.25, -0.25, 0.25, -0.25, 0.25, -0.25, 0.25, - 0.25) and the elements of the treatment vector should be ti 2 {1,2,3,4,5,6,7,8}
+#' @return estimate, standard_error, p value (two-tailed test of null)
+#' @examples
+#' TBD
 htEstimate = function(outcome, assignment, contrasts, prob_matrix, approx = "youngs", totals = F) {
-
+  result = list(estimate=NA, std_err=NA, p=NA)
+  return(result)
 }
