@@ -209,9 +209,19 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
         } else {
           # Option 2: pi_ij = 0
           # Third component of equation 32.
-          # This is young's equality right now?
-          joint_component = (assignment[i] == assign_i) * outcome[i]^2/(2*pi_i)
-            + (assignment[j] == assign_i) * outcome[j]^2/(2*pi_j)
+          # This is young's equality right now.
+          # TODO: support constant effects variance estimation (Aronow diss 2.5)
+          # TODO: support sharp null hypothesis.
+          if (approx == "youngs") {
+            joint_component = (assignment[i] == assign_i) * outcome[i]^2/(2*pi_i)
+              + (assignment[j] == assign_i) * outcome[j]^2/(2*pi_j)
+          }
+          else if (approx == "constant effects") {
+
+          }
+          else if (approx == "sharp null") {
+
+          }
         }
 
         running_sum = running_sum + joint_component
