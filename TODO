@@ -1,10 +1,14 @@
 TODO
 
 Misc
-- Describe the proejct in Readme.md
+- Add support for constant treatment effects and sharp null approximations.
+- Support totals in addition to means.
+- Describe the project in Readme.md
 - Add more test cases.
 - Add header comments to all functions.
+- Support clustering.
 - Make sure all function bodies are well commented.
 - Test a probability matrix based on re-randomization (ri package or otherwise)
 - Test an htEstimate based on a re-randomized probMatrix (ri package or otherwise)
 - Compare HT results to those of an existing package (samplingVarEst, SamplingBook, maybe ri)
+- Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
