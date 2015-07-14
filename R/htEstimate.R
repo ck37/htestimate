@@ -209,6 +209,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
         } else {
           # Option 2: pi_ij = 0
           # Third component of equation 32.
+          # This is young's equality right now?
           joint_component = (assignment[i] == assign_i) * outcome[i]^2/(2*pi_i)
             + (assignment[j] == assign_i) * outcome[j]^2/(2*pi_j)
         }
@@ -272,9 +273,10 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
   # Calculate all needed covarianaces - we will use a weighted sum of their totals.
 
-  # 3. Calculate the probability.
+  # 3. Calculate the probability using the normal distribution.
+  p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.
-  result = list(estimate=estimate, std_err=se, p=NA)
+  result = list(estimate=estimate, std_err=se, p_value=p_value)
   return(result)
 }
