@@ -68,6 +68,7 @@ createProbMatrix = function(assignments, byrow = F) {
   return(result)
 }
 
+# TODO: add function header.
 getRawMatrixEntries = function(row, col, n, direct=F) {
   # Starting row & col in the full matrix.
   start_row = 1 + (row - 1)  * n
@@ -82,6 +83,7 @@ getRawMatrixEntries = function(row, col, n, direct=F) {
   }
 }
 
+# TODO: add function header.
 generateAssignmentProbs = function(row, col, assignments, assign_levels) {
   k = length(assign_levels)
   n = nrow(assignments)
@@ -99,7 +101,8 @@ generateAssignmentProbs = function(row, col, assignments, assign_levels) {
   return(probs)
 }
 
-#' @title Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals and hypothesis tests.
+#' @title Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals
+#' and hypothesis tests.
 #'
 #' @description TBD
 #'
@@ -167,8 +170,8 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
   # 2. Calculate the SE.
 
-  # The sampling variance of the estimator is: (T = total, 1 = treatment, 0 = control)
-  # 1/N^2 * (Var(Y1_T) + Var(Y0_T) - 2Cov(Y1_T, Y0_T))
+  # Calculate all needed covarianaces - we will use a weighted sum of their totals.
+
 
   # Loop over each assignment level and calculate the variance of the total.
   # Actually, this is equation UEATE#32.
@@ -223,10 +226,10 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
               + (assignment[j] == assign_a) * outcome[j]^2/(2*pi_aj)
           }
           else if (approx == "constant effects") {
-
+            # TODO: implementation here.
           }
           else if (approx == "sharp null") {
-
+            # TODO: implementation here.
           }
         }
 
@@ -284,17 +287,21 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     }
   }
 
+  # The sampling variance of the estimator is: (T = total, 1 = treatment, 0 = control)
+  # 1/N^2 * (Var(Y1_T) + Var(Y0_T) - 2Cov(Y1_T, Y0_T))
+
   # Weighted-sum of variance and covariance terms.
   # TODO: confirm that this use of the contrast weights is correct.
+  # I think we don't need to multiply two because we are using both triangles of a symmetric matrix.
   var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T)) / n^2
   se = sqrt(var)
 
-  # Calculate all needed covarianaces - we will use a weighted sum of their totals.
 
   # 3. Calculate the probability using the normal distribution.
   p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.
-  result = list(estimate=estimate, std_err=se, p_value=p_value)
+  # We include the variances and covariances for debugging purposes only.
+  result = list(estimate=estimate, std_err=se, p_value=p_value, variances=variance_of_totals, covariances=covariances)
   return(result)
 }
