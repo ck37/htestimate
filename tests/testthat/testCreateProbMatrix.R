@@ -1,3 +1,4 @@
+library(testthat) # For the context() function, in case we run this file manually.
 library(crank) # We use the permute() function.
 
 # Create test matrix 1 per the PDF document.

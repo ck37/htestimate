@@ -1,4 +1,5 @@
 library(crank) # We use the permute() function.
+library(testthat)
 
 # Create test matrix 1 per the PDF document.
 arms1 = 1:3
@@ -13,8 +14,8 @@ testmat1_k = length(unique(arms1))
 # Check that a simple test case works.
 context("Simple test case")
 
-probs = createProbMatrix(testmat1)
-probs
+prob_matrix = createProbMatrix(testmat1)
+prob_matrix
 
 set.seed(4976401)
 # Create sample outcome vector.
@@ -25,7 +26,13 @@ outcome
 rand_column = sample(ncol(testmat1), 1)
 assignment = testmat1[, rand_column]
 assignment
+# Make a copy equal to the internal argument of htEstimate, to help with debugging.
+raw_assignment = assignment
 
 # Compare assignment 1 to assignment 2.
-result = htEstimate(outcome, assignment, c(1, -1, 0), probs)
+contrasts = c(1, -1, 0)
+result = htEstimate(outcome, assignment, contrasts, prob_matrix)
 result
+
+# This is what the variance weights are for the standard error estimate.
+contrasts %*% t(contrasts)
