@@ -60,7 +60,7 @@ createProbMatrix = function(assignments, byrow = F) {
       dest = getRawMatrixEntries(row, col, n)
 
       # TODO: determine if we should be transposing the targetMat here.
-      result[dest$start_row:dest$end_row, dest$start_col:dest$end_col] = targetMat
+      result[dest$start_row:dest$end_row, dest$start_col:dest$end_col] = t(targetMat)
     }
   }
 
@@ -246,7 +246,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
           # TODO: need to review this equation, not sure if it's right.
           # Esp. the assignment[j] == assign_j part.
-          # Equation #34 HERE:
+          # Equation #34 HERE (youngs inequality):
           # First component:
           cov_running_sum = cov_running_sum + (assignment[i] == assign_i) * (assignment[j] == assign_j) /
             pi_ij * (pi_ij - pi_i * pi_j) * outcome[i] * outcome[j] / (pi_i * pi_j)
@@ -265,7 +265,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     }
   }
 
-  # TODO: add covariance terms.
+  # Weighted-sum of variance and covariance terms.
   # TODO: confirm that this use of the contrast weights is correct.
   var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T)) / n^2
   se = sqrt(var)
