@@ -68,13 +68,18 @@ createProbMatrix = function(assignments, byrow = F) {
   return(result)
 }
 
-getRawMatrixEntries = function(row, col, n) {
+getRawMatrixEntries = function(row, col, n, direct=F) {
   # Starting row & col in the full matrix.
   start_row = 1 + (row - 1)  * n
   end_row = start_row + n - 1
   start_col = 1 + (col - 1) * n
   end_col = start_col + n - 1
-  return(list(start_row=start_row, end_row=end_row, start_col=start_col, end_col=end_col))
+  if (direct) {
+    # TODO: can we do something like this?
+    #return(c(c(start_row:end_row), c(start_col:end_col)))
+  } else {
+    return(list(start_row=start_row, end_row=end_row, start_col=start_col, end_col=end_col))
+  }
 }
 
 generateAssignmentProbs = function(row, col, assignments, assign_levels) {
@@ -130,7 +135,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   # N is the number of units.
   n = length(assignment)
 
-  # 1. Calculate the effect estimate.
+  # 1. Calculate the effect estimate - see Aronow diss pages 14-15, esp. eq 2.8.
 
   # For each assignment, scale the outcomes of units with that assignment by the inverse of their
   # probability of assignment (on the diagonal matrix), generating a total for that outcome.
@@ -158,10 +163,118 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
   # 2. Calculate the SE.
 
+  # The sampling variance of the estimator is: (T = total, 1 = treatment, 0 = control)
+  # 1/N^2 * (Var(Y1_T) + Var(Y0_T) - 2Cov(Y1_T, Y0_T))
+
+  # Loop over each assignment level and calculate the variance of the total.
+  # This is equation UEATE#21 (#27 when we account for clusters)
+  # Actually, this is equation #32.
+  variance_of_totals = rep(NA, k)
+  covariances = matrix(nrow=k, ncol=k)
+  for (assign_i in 1:k) {
+    assignment_level = assignment_levels[assign_i]
+    running_sum = 0
+
+    for (i in 1:n) {
+      # Pi_individual is the non-joint assignment probability of this unit to this level.
+      # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
+      cells = getRawMatrixEntries(assign_i, assign_i, n)
+      pi_i = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
+
+      # T'k(1 - pi_1k)*(Y_k/Pi_1k)^2
+      # TODO: Does this need to check if pi_indiv == 0?? Doesn't seem to in the formula.
+      first_component = (assignment[i] == assign_i) * (1 - pi_i)*(outcome[i]/pi_i)^2
+
+      #individual_component = pi_individual * (1 - pi_individual) * (outcome[i]/pi_individual)^2
+      running_sum = running_sum + first_component
+
+      # Second and third components of equation 32
+      for (j in 1:n) {
+        # Skip this iteration if i == j
+        if (i == j) next
+
+        # TODO: confirm if we should use j or assign_i here.
+        #cells = getRawMatrixEntries(assign_i, assign_i, n)
+        pi_j = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][j, j]
+
+        # TODO: confirm if we should use j or assign_i here.
+        #cells = getRawMatrixEntries(assign_i, assign_i, n)
+        pi_ij = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, j]
+
+        if (pi_ij > 0) {
+          # Option 1: pi_ij > 0
+          # Second component of equation 32.
+          joint_component = (assignment[i] == assign_i)*(assignment[j] == assign_i) / pi_ij *
+            (pi_ij - pi_i * pi_j) * outcome[i] / pi_i * outcome[j] / pi_j
+        } else {
+          # Option 2: pi_ij = 0
+          # Third component of equation 32.
+          joint_component = (assignment[i] == assign_i) * outcome[i]^2/(2*pi_i)
+            + (assignment[j] == assign_i) * outcome[j]^2/(2*pi_j)
+        }
+
+        running_sum = running_sum + joint_component
+      }
+    }
+    variance_of_totals[assign_i] = running_sum
+
+    # Create the covariances for this assignment level.
+    # CUE#34
+    cov_running_sum = 0
+    # TODO: save work by only computing one triangle, rather than both triangles of the symmetric matrix.
+    # TODO: right now this matrix is not symmetric, so there are remaining bugs.
+    for (assign_j in 1:k) {
+      # Skip when we are at our own level.
+      if (assign_i == assign_j) next
+      # Create a backup of the cells found in the previous loop, before we overwrite them.
+      cells_i = cells
+      for (i in 1:n) {
+
+        # TODO: I think this part may be wrong, need to double-check. Should it be assign_i, assign_j?
+        cells = getRawMatrixEntries(assign_i, assign_i, n)
+        pi_i = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
+        for (j in 1:n) {
+          # Skip the same observation.
+          if (i == j) next
+
+          # TODO: Should the cells indices be assign_i & assign_j? or i & j?
+          cells = getRawMatrixEntries(assign_i, assign_j, n)
+          pi_ij = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, j]
+
+          cells = getRawMatrixEntries(assign_j, assign_j, n)
+          pi_j = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][j, j]
+
+          # TODO: need to review this equation, not sure if it's right.
+          # Esp. the assignment[j] == assign_j part.
+          # Equation #34 HERE:
+          # First component:
+          cov_running_sum = cov_running_sum + (assignment[i] == assign_i) * (assignment[j] == assign_j) /
+            pi_ij * (pi_ij - pi_i * pi_j) * outcome[i] * outcome[j] / (pi_i * pi_j)
+        }
+
+        # Eq#34 second component:
+        cov_running_sum = cov_running_sum - (assign_i == assignment[i]) * outcome[i]^2 / (2 * pi_i)
+
+        # Eq#34 third component:
+        cells = getRawMatrixEntries(assign_j, assign_j, n)
+        pi_0i = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
+        cov_running_sum = cov_running_sum - (assign_j == assignment[i]) * outcome[i]^2 / (2 * pi_0i)
+      }
+      covariances[assign_i, assign_j] = cov_running_sum
+
+    }
+  }
+
+  # TODO: add covariance terms.
+  # TODO: confirm that this use of the contrast weights is correct.
+  var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T)) / n^2
+  se = sqrt(var)
+
+  # Calculate all needed covarianaces - we will use a weighted sum of their totals.
 
   # 3. Calculate the probability.
 
   # Return the results.
-  result = list(estimate=estimate, std_err=NA, p=NA)
+  result = list(estimate=estimate, std_err=se, p=NA)
   return(result)
 }
