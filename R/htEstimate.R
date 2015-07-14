@@ -69,6 +69,7 @@ createProbMatrix = function(assignments, byrow = F) {
 }
 
 # TODO: add function header.
+# Doesn't this need the number of assignments and/or the total number of records?
 getRawMatrixEntries = function(row, col, n, direct=F) {
   # Starting row & col in the full matrix.
   start_row = 1 + (row - 1)  * n
@@ -183,38 +184,38 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     level_a = assignment_levels[assign_a]
     running_sum = 0
 
-    for (i in 1:n) {
+    for (k in 1:n) {
       # Pi_ai is the non-joint assignment probability of this unit to this assignment level/arm.
       # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
       cells = getRawMatrixEntries(assign_a, assign_a, n)
-      pi_ai = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
+      pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][k, k]
 
       # Equation: UEATE#32, first component.
       # T'k(1 - pi_1k)*(Y_k/Pi_1k)^2
       # TODO: Does this need to check if pi_indiv == 0?? Doesn't seem to in the formula.
-      first_component = (assignment[i] == assign_a) * (1 - pi_ai)*(outcome[i]/pi_ai)^2
+      first_component = (assignment[k] == assign_a) * (1 - pi_ak)*(outcome[k]/pi_ak)^2
 
       #individual_component = pi_individual * (1 - pi_individual) * (outcome[i]/pi_individual)^2
       running_sum = running_sum + first_component
 
       # Second and third components of equation 32
-      for (j in 1:n) {
+      for (l in 1:n) {
         # Skip this iteration if i == j
-        if (i == j) next
+        if (k == l) next
 
         # TODO: confirm if we should use j or assign_i here.
         #cells = getRawMatrixEntries(assign_i, assign_i, n)
-        pi_aj = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][j, j]
+        pi_al = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][l, l]
 
         # TODO: confirm if we should use j or assign_i here.
         #cells = getRawMatrixEntries(assign_i, assign_i, n)
-        pi_aiaj = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, j]
+        pi_ak_al = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][k, l]
 
-        if (pi_aiaj > 0) {
+        if (pi_ak_al > 0) {
           # Option 1: pi_ij > 0
           # Second component of equation 32.
-          joint_component = (assignment[i] == assign_a)*(assignment[j] == assign_a) / pi_aiaj *
-            (pi_aiaj - pi_ai * pi_aj) * outcome[i] / pi_ai * outcome[j] / pi_aj
+          joint_component = (assignment[k] == assign_a)*(assignment[l] == assign_a) / pi_ak_al *
+            (pi_ak_al - pi_ak * pi_al) * outcome[k] / pi_ak * outcome[l] / pi_al
         } else {
           # Option 2: pi_ij = 0
           # Third component of equation 32.
@@ -222,8 +223,8 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
           # TODO: support constant effects variance estimation (Aronow diss 2.5)
           # TODO: support sharp null hypothesis.
           if (approx == "youngs") {
-            joint_component = (assignment[i] == assign_a) * outcome[i]^2/(2*pi_ai)
-              + (assignment[j] == assign_a) * outcome[j]^2/(2*pi_aj)
+            joint_component = (assignment[k] == assign_a) * outcome[k]^2/(2*pi_ak)
+              + (assignment[l] == assign_a) * outcome[l]^2/(2*pi_al)
           }
           else if (approx == "constant effects") {
             # TODO: implementation here.
@@ -245,42 +246,42 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     # TODO: right now this matrix is not symmetric, so there are remaining bugs.
     for (assign_b in 1:k) {
       # Skip when we are at our own level.
-      if (assign_i == assign_b) next
+      if (assign_a == assign_b) next
 
       level_b = assignment_levels[assign_b]
       # Create a backup of the cells found in the previous loop, before we overwrite them.
       cells_i = cells
-      for (i in 1:n) {
+      for (k in 1:n) {
 
         # TODO: I think this part may be wrong, need to double-check. Should it be assign_i, assign_j?
         cells = getRawMatrixEntries(assign_a, assign_a, n)
-        pi_ai = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
-        for (j in 1:n) {
+        pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][k, k]
+        for (l in 1:n) {
           # Skip the same observation.
-          if (i == j) next
+          if (k == l) next
 
           # TODO: Should the cells indices be assign_i & assign_j? or i & j?
           cells = getRawMatrixEntries(assign_a, assign_b, n)
-          pi_aibj = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, j]
+          pi_ak_bl = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][k, l]
 
           cells = getRawMatrixEntries(assign_b, assign_b, n)
-          pi_bj = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][j, j]
+          pi_bl = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][l, l]
 
           # TODO: need to review this equation, not sure if it's right.
           # Esp. the assignment[j] == assign_j part.
           # Equation #34 HERE (youngs inequality):
           # First component:
-          cov_running_sum = cov_running_sum + (assignment[i] == assign_a) * (assignment[j] == assign_b) /
-            pi_aibj * (pi_aibj - pi_ai * pi_bj) * outcome[i] * outcome[j] / (pi_ai * pi_bj)
+          cov_running_sum = cov_running_sum + (assignment[k] == assign_a) * (assignment[l] == assign_b) /
+            pi_ak_bl * (pi_ak_bl - pi_ak * pi_bl) * outcome[k] * outcome[l] / (pi_ak * pi_bl)
         }
 
         # Eq#34 second component:
-        cov_running_sum = cov_running_sum - (assign_a == assignment[i]) * outcome[i]^2 / (2 * pi_ai)
+        cov_running_sum = cov_running_sum - (assign_a == assignment[k]) * outcome[k]^2 / (2 * pi_ak)
 
         # Eq#34 third component:
         cells = getRawMatrixEntries(assign_b, assign_b, n)
-        pi_bi = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][i, i]
-        cov_running_sum = cov_running_sum - (assign_b == assignment[i]) * outcome[i]^2 / (2 * pi_bi)
+        pi_bk = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][k, k]
+        cov_running_sum = cov_running_sum - (assign_b == assignment[k]) * outcome[k]^2 / (2 * pi_bk)
       }
       covariances[assign_a, assign_b] = cov_running_sum
 
