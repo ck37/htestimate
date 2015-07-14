@@ -31,6 +31,7 @@ raw_assignment = assignment
 
 # Compare assignment 1 to assignment 2.
 contrasts = c(1, -1, 0)
+approx = "youngs"
 result = htEstimate(outcome, assignment, contrasts, prob_matrix)
 result
 
