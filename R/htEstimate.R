@@ -131,6 +131,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
  # clean_assignment = assign_dict[[assignment]]
 
   # For now, just assume that all assignments are consecutive natural numbers (1:k).
+  # TODO: this needs to handle 0/1 assignment values per the ri package.
   assignment = raw_assignment
 
   # K is the number of unique assignment values.
@@ -138,6 +139,7 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
   # N is the number of units.
   n = length(assignment)
+  cat("N:", n, "K:", k, "\n")
 
   # 1. Calculate the effect estimate - see Aronow diss pages 14-15, esp. eq 2.8.
 
@@ -151,23 +153,50 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   weight_rows = c()
   for (i in 1:n) {
     weight_rows[i] = 1 + (i - 1) * n + (assignment[i] - 1)
+  #  cat("i:", i, "assignment[i]", assignment[i], "Weight index:", weight_rows[i], "\n")
   }
+  #cat("Weight_rows:", weight_rows, "\n")
 
   # Loop over each assignment level.
+  #cat("Loop over each assignment level.\n")
   for (i in 1:k) {
     assignment_level = assignment_levels[i]
     # TODO: are these the right cells in the prob matrix? Doesn't it need to vary by the assignment level?
     # I think we need to use getRawMatrixEntries function here, based on the assignment level.
     #weights = prob_matrix[weight_rows[assignment == assignment_level], weight_rows[assignment == assignment_level]]
     cells = getRawMatrixEntries(assignment_level, assignment_level, n)
+    #cat("i", i, "assignment_level", assignment_level, "Cells:", "\n")
+    #print(cells)
     weights = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][assignment == assignment_level, assignment == assignment_level]
+    # Number of observations with this assignment level
+    n_obs = length(outcome[assignment == assignment_level])
+    #cat("Weights:\n")
+    #print(weights)
+    #cat("Dim weights:\n")
+    #print(dim(weights))
+    #cat("Outcomes: (", n_obs, ")\n")
+    #print(outcome[assignment == assignment_level])
+    #cat("Diag of weights:\n")
+    #print(matDiag(weights))
 
     # Calculate the inverse-probability weighted total.
-    outcome_totals[i] = outcome[assignment == assignment_level] / weights
+    # This doesn't work correctly - commenting out and running in a loop for now.
+    # outcome_totals[i] = outcome[assignment == assignment_level] / matDiag(weights)
+    # Do it slower for debugging.
+    outcome_totals[i] = 0
+    for (diag_i in 1:n_obs) {
+      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / matDiag(weights)[diag_i]
+    }
+    #cat("Outcome totals:\n")
+    #print(outcome_totals[i])
   }
+
+  #cat("Completed the loop.\n")
+  #cat("Outcome totals:", outcome_totals, "\n")
 
   # Then weight those outcomes by the contrast weightings, computing the sum, and divide by N.
   estimate = sum(outcome_totals * contrasts) / n
+  cat("Estimate:", estimate, "\n")
 
   # 2. Calculate the SE.
 
@@ -183,8 +212,11 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     # TODO: use level_a when the assignment levels are not 1:k
     level_a = assignment_levels[assign_a]
     running_sum = 0
+    cat("Assign_a:", assign_a, "Level_a:", level_a, "\n")
 
+    # Loop over each observation.
     for (k in 1:n) {
+      cat("Assignmnet level:", level_a, "Observation:", k)
       # Pi_ai is the non-joint assignment probability of this unit to this assignment level/arm.
       # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
       cells = getRawMatrixEntries(assign_a, assign_a, n)
@@ -305,4 +337,27 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   # We include the variances and covariances for debugging purposes only.
   result = list(estimate=estimate, std_err=se, p_value=p_value, variances=variance_of_totals, covariances=covariances)
   return(result)
+}
+
+# Return the diagonal of the matrix.
+matDiag = function(mat) {
+  # Must be a 1x1 vector.
+  if (class(mat) != "matrix") {
+    if (length(mat) == 1) {
+      return(mat[1])
+    } else {
+      throw("Input argument is not a matrix")
+    }
+  }
+  if (dim(mat)[1] != dim(mat)[2]) {
+    throw("Diagonal is only defined on square matrices.")
+  }
+
+  # Allocate our results first so that we don't have to resize the vector.
+  diag = rep(0, dim(mat)[1])
+
+  for (i in 1:dim(mat)[1]) {
+    diag[i] = mat[i, i]
+  }
+  return(diag)
 }
