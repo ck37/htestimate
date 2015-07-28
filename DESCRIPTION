@@ -3,9 +3,12 @@ Type: Package
 Title: Horvitz-Thompson Estimate
 Version: 0.1
 Date: 2015-06-07
-Author: Chris Kennedy and Joel Middleton
-Maintainer: Chris Kennedy <chrisken@gmail.com>
+Authors@R: as.person(c(
+  "Chris Kennedy <ck37@berkeley.edu> [aut, cre]",
+  "Joel Middleton <joel.middleton@gmail.com> [aut]"
+))
+URL: http://github.com/ck37/htestimate
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
-Suggests: testthat
+Suggests: testthat, crank
