@@ -24,8 +24,8 @@ createProbMatrix = function(assignments, byrow = F) {
   #TODO: throw an error if k == 1
   #TODO: throw an error if n == 1
 
-  # Matrix to store the results.
-  result = matrix(nrow = n*k, ncol=n*k)
+  # Matrix to store the results. Initialize all cells to -1 so that we can see errors for easily.
+  result = matrix(data=-1, nrow = n*k, ncol=n*k)
   #cat("Result dimensions:", n*k, "by", n*k, "\n")
 
   # Create the diagonals and lower triangle.
