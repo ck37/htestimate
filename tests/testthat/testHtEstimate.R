@@ -42,14 +42,17 @@ contrasts %*% t(contrasts)
 # How does this compare to the ri package results?
 library(ri)
 #probs = genprobexact(assignment)
-testmat1
-probs = genprob(t(testmat1))
-probs
-probs = genprob(testmat1)
-probs
-perms = genperms(arms1)
-ate = estate(outcome, assignment, prob=probs)
-ate
+# These are not working, because RI only supports 0/1 assignment vectors :(
+if (F) {
+  testmat1
+  probs = genprob(t(testmat1))
+  probs
+  probs = genprob(testmat1)
+  probs
+  perms = genperms(arms1)
+  ate = estate(outcome, assignment, prob=probs)
+  ate
+}
 
 # RI package example, but without blocking or clustering.
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
@@ -60,10 +63,16 @@ table(Z)
 #block
 
 # Generates 10,000 samples by default.
-#z_ck = z + 1
-#table(z_ck)
-perms = genperms(Z)
+perms = genperms(Z, maxiter=100000)
 dim(perms)
+# It stops at 43,758 because that is all of the permutations.
+choose(18, 10)
+
+# Look at the first 10 random permutations
+perms[,1:10]
+# Look at the assignment probability for those first 10 permutations.
+colMeans(perms)[1:10]
+
 probs <- genprob(perms) # probability of treatment
 probs
 ate <- estate(y,Z,prob=probs) # estimate the ATE
@@ -74,7 +83,13 @@ z_ck = Z + 1
 table(z_ck)
 perms_ck = perms + 1
 dim(perms_ck)
+# Double-check the first 10 permutations.
+perms_ck[, 1:10]
 prob_matrix = createProbMatrix(perms_ck)
+# Examine the 1x1 matrix in the upper left.
+prob_matrix[1:18, 1:18]
+
+# Examine the htEstimate results.
 result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 result
 
