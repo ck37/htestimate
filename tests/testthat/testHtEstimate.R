@@ -37,3 +37,62 @@ result
 
 # This is what the variance weights are for the standard error estimate.
 contrasts %*% t(contrasts)
+
+
+# How does this compare to the ri package results?
+library(ri)
+#probs = genprobexact(assignment)
+testmat1
+probs = genprob(t(testmat1))
+probs
+probs = genprob(testmat1)
+probs
+perms = genperms(arms1)
+ate = estate(outcome, assignment, prob=probs)
+ate
+
+# RI package example, but without blocking or clustering.
+y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+table(Z)
+#cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
+#block <- c(rep(1,4),rep(2,6),rep(3,8))
+#block
+
+# Generates 10,000 samples by default.
+#z_ck = z + 1
+#table(z_ck)
+perms = genperms(Z)
+dim(perms)
+probs <- genprob(perms) # probability of treatment
+probs
+ate <- estate(y,Z,prob=probs) # estimate the ATE
+ate
+
+# Convert from 0/1 to 1/2 assignment indictators, for compatability.
+z_ck = Z + 1
+table(z_ck)
+perms_ck = perms + 1
+dim(perms_ck)
+prob_matrix = createProbMatrix(perms_ck)
+result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+result
+
+# Try with 100k perms
+perms2 = genperms(Z, maxiter=100000)
+perms_ck = perms2 + 1
+prob_matrix2 = createProbMatrix(perms_ck)
+result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+result
+
+
+# TODO: Compare to the RI package example, this time with clustering and blocking:
+y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
+block <- c(rep(1,4),rep(2,6),rep(3,8))
+block
+probs <- genprobexact(Z,blockvar=block, clustvar=cluster) # probability of treatment
+probs
+ate <- estate(y,Z,prob=probs) # estimate the ATE
+ate

@@ -11,4 +11,4 @@ URL: http://github.com/ck37/htestimate
 Description: More about what it does (maybe more than one line)
 License: What license is it under?
 LazyData: TRUE
-Suggests: testthat, crank
+Suggests: testthat, crank, ri
