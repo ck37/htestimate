@@ -4,7 +4,7 @@ Functionality
 - IN PROGRESS: Support totals in addition to means.
 - IN PROGRESS: Add support for constant treatment effects and sharp null approximations.
 - IN PROGRESS: Support clustering.
-- IN PROGRESS: Auto-convert assignment levels to 1..k, e.g. to support 0/1 assignment levels.
+- IN PROGRESS: Auto-convert assignment levels to 1..k, e.g. to support 0/1 assignment levels, per the ri package.
 - Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
 
 Documentation
