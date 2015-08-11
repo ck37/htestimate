@@ -14,5 +14,5 @@ Documentation
 Testing
 - IN PROGRESS: Test an htEstimate based on a re-randomized probMatrix (ri package or otherwise)
 - Test a probability matrix based on re-randomization (ri package or otherwise)
-- Compare HT results to those of an existing package (samplingVarEst, SamplingBook, maybe ri)
+- Compare HT results to those of additional packages (samplingVarEst, SamplingBook)
 - Add more test cases.
