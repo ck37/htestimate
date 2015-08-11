@@ -86,7 +86,15 @@ createProbMatrix = function(raw_assignments, byrow = F) {
   return(result)
 }
 
-# TODO: add function header.
+#' @title TBD
+#'
+#' @description TBD
+#'
+#' @param row TBD
+#' @param col TBD
+#' @param n
+#' @param direct
+#' @return TBD
 # Doesn't this need the number of assignments and/or the total number of records? -> No, just n.
 getRawMatrixEntries = function(row, col, n, direct=F) {
   # Starting row & col in the full matrix.

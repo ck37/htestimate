@@ -7,8 +7,8 @@ Functionality
 - Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
 
 Documentation
+- IN PROGRESS: Add header comments to all functions.
 - Describe the project in Readme.md
-- Add header comments to all functions.
 - Make sure all function bodies are well commented.
 
 Testing
