@@ -1,7 +1,9 @@
 library(crank) # We use the permute() function.
 library(testthat)
+library(ri)
 
-# Create test matrix 1 per the PDF document.
+####################
+# Test 1. Create test matrix 1 per the PDF document.
 arms1 = 1:3
 # We transpose the results so that each permutation is a column.
 testmat1 = t(permute(arms1))
@@ -14,7 +16,10 @@ testmat1_k = length(unique(arms1))
 # Check that a simple test case works.
 context("Simple test case")
 
-prob_matrix = createProbMatrix(testmat1)
+# Here we set the internal arguments to createProbMatrix to ease in debugging.
+raw_assignments = testmat1
+byrow = F
+prob_matrix = createProbMatrix(raw_assignments = raw_assignments, byrow = byrow)
 prob_matrix
 
 set.seed(4976401)
@@ -33,14 +38,24 @@ raw_assignment = assignment
 contrasts = c(1, -1, 0)
 approx = "youngs"
 result = htEstimate(outcome, assignment, contrasts, prob_matrix)
+# This result is an estimate of 0.93 and p-value of 0.545. Actually, now we're getting 0.607 as the p-value??
 result
 
 # This is what the variance weights are for the standard error estimate.
 contrasts %*% t(contrasts)
 
+# Test 1b - what is we change the assignments to be 0, 1, 2 rather than 1, 2, 3?
+testmat1
+testmat1b = testmat1 - 1
+testmat1b
+prob_matrix = createProbMatrix(testmat1)
+prob_matrix2 = createProbMatrix(testmat1b)
+prob_matrix2
+
+# This should return true, meaning that each cell is equal. Dimnames can be different.
+all.equal(prob_matrix, prob_matrix2)
 
 # How does this compare to the ri package results?
-library(ri)
 #probs = genprobexact(assignment)
 # These are not working, because RI only supports 0/1 assignment vectors :(
 if (F) {
@@ -54,7 +69,8 @@ if (F) {
   ate
 }
 
-# RI package example, but without blocking or clustering.
+####################
+# Test 2. RI package example, but without blocking or clustering.
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 table(Z)
@@ -63,10 +79,8 @@ table(Z)
 #block
 
 # Generates 10,000 samples by default.
-perms = genperms(Z, maxiter=100000)
+perms = genperms(Z, maxiter=10000)
 dim(perms)
-# It stops at 43,758 because that is all of the permutations.
-choose(18, 10)
 
 # Look at the first 10 random permutations
 perms[,1:10]
@@ -75,8 +89,8 @@ colMeans(perms)[1:10]
 
 probs <- genprob(perms) # probability of treatment
 probs
-ate <- estate(y,Z,prob=probs) # estimate the ATE
-ate
+ri_ate = estate(y,Z,prob=probs) # estimate the ATE
+ri_ate
 
 # Convert from 0/1 to 1/2 assignment indictators, for compatability.
 z_ck = Z + 1
@@ -86,22 +100,48 @@ dim(perms_ck)
 # Double-check the first 10 permutations.
 perms_ck[, 1:10]
 prob_matrix = createProbMatrix(perms_ck)
+# This second version keeps the original 0/1 coding.
+prob_matrix2 = createProbMatrix(perms)
+# We should get the same probabilities between the two.
+all.equal(prob_matrix, prob_matrix2)
 # Examine the 1x1 matrix in the upper left.
 prob_matrix[1:18, 1:18]
 
 # Examine the htEstimate results.
+outcome = y
+raw_assignment = z_ck
+contrasts = c(-1, 1)
+table(raw_assignment)
+# This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
 result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 result
+# This version keeps the original 0, 1 assignment levels.
+result = htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
+result
+
+# ERROR: we are getting slightly different estimate results. What's the deal??
+result$estimate == ri_ate
 
 # Try with 100k perms
 perms2 = genperms(Z, maxiter=100000)
-perms_ck = perms2 + 1
-prob_matrix2 = createProbMatrix(perms_ck)
-result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+# It stops at 43,758 because that is all of the permutations.
+choose(18, 10)
+prob_matrix2 = createProbMatrix(perms2)
+result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
 result
 
+# Retry with RI.
+probs = genprob(perms2) # probability of treatment
+probs
+ri_ate = estate(y,Z,prob=probs) # estimate the ATE
+ri_ate
 
-# TODO: Compare to the RI package example, this time with clustering and blocking:
+# Confirm equality within epsilon.
+abs(result$estimate - ri_ate) <= 0.0000000001
+
+
+####################
+# Test 3. Compare to the RI package example, this time with clustering and blocking:
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)

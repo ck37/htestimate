@@ -38,6 +38,8 @@ context("Diagonal")
 context("Off-Diagonal")
 # Check that the off-diagonal results are correct.
 
+# Each off-diagonal square should sum to 1 (I think).
+
 # Check lower triangle.
 
 # Confirm that base matrix is symmetric.
