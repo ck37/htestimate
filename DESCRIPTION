@@ -8,7 +8,7 @@ Authors@R: as.person(c(
   "Joel Middleton <joel.middleton@gmail.com> [aut]"
 ))
 URL: http://github.com/ck37/htestimate
-Description: More about what it does (maybe more than one line)
+Description: Unbiased estimation for RCTs using Horvitz-Thompson.
 License: What license is it under?
 LazyData: TRUE
 Requires:
