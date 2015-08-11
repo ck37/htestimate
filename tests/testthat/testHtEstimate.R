@@ -116,28 +116,34 @@ table(raw_assignment)
 result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 result
 # This version keeps the original 0, 1 assignment levels.
-result = htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
-result
+result2 = htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
+result2
+
+# These should be true.
+unlist(result) == unlist(result2)
+all.equal(unlist(result), unlist(result2))
 
 # ERROR: we are getting slightly different estimate results. What's the deal??
 result$estimate == ri_ate
 
 # Try with 100k perms
-perms2 = genperms(Z, maxiter=100000)
+perms_100k = genperms(Z, maxiter=100000)
 # It stops at 43,758 because that is all of the permutations.
 choose(18, 10)
-prob_matrix2 = createProbMatrix(perms2)
-result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
+prob_matrix_100k = createProbMatrix(perms2)
+result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix_100k)
 result
 
 # Retry with RI.
-probs = genprob(perms2) # probability of treatment
-probs
-ri_ate = estate(y,Z,prob=probs) # estimate the ATE
+probs_100k = genprob(perms_100k) # probability of treatment
+probs_100k
+ri_ate = estate(y,Z,prob=probs_100k) # estimate the ATE
 ri_ate
 
 # Confirm equality within epsilon.
 abs(result$estimate - ri_ate) <= 0.0000000001
+# Even more precise:
+abs(result$estimate - ri_ate) <= .Machine$double.eps*2
 
 
 ####################
@@ -151,3 +157,4 @@ probs <- genprobexact(Z,blockvar=block, clustvar=cluster) # probability of treat
 probs
 ate <- estate(y,Z,prob=probs) # estimate the ATE
 ate
+
