@@ -1,14 +1,18 @@
 TODO
 
-Misc
-- Add support for constant treatment effects and sharp null approximations.
-- Support totals in addition to means.
-- Describe the project in Readme.md
-- Add more test cases.
-- Add header comments to all functions.
-- Support clustering.
-- Make sure all function bodies are well commented.
-- Test a probability matrix based on re-randomization (ri package or otherwise)
-- Test an htEstimate based on a re-randomized probMatrix (ri package or otherwise)
-- Compare HT results to those of an existing package (samplingVarEst, SamplingBook, maybe ri)
+Functionality
+- IN PROGRESS: Support totals in addition to means.
+- IN PROGRESS: Add support for constant treatment effects and sharp null approximations.
+- IN PROGRESS: Support clustering.
 - Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
+
+Documentation
+- Describe the project in Readme.md
+- Add header comments to all functions.
+- Make sure all function bodies are well commented.
+
+Testing
+- IN PROGRESS: Test an htEstimate based on a re-randomized probMatrix (ri package or otherwise)
+- Test a probability matrix based on re-randomization (ri package or otherwise)
+- Compare HT results to those of an existing package (samplingVarEst, SamplingBook, maybe ri)
+- Add more test cases.
