@@ -427,10 +427,10 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 }
 
 #' @title Return the diagonal of the matrix.
-#' @description
+#' @description TBD
 #' @param mat Input matrix, must be square.
 #' @return diagonal elements of the matrix as a vector.
-#' @examples
+#' @examples TBD
 matDiag = function(mat) {
   # Must be a 1x1 vector.
   if (class(mat) != "matrix") {
