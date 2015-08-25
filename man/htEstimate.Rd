@@ -2,8 +2,7 @@
 % Please edit documentation in R/htEstimate.R
 \name{htEstimate}
 \alias{htEstimate}
-\title{Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals
-and hypothesis tests.}
+\title{Unbiased treatment effect estimation with Horvitz-Thompson}
 \usage{
 htEstimate(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs",
   totals = F, cluster_id = NULL)
@@ -31,9 +30,18 @@ Other options:
 estimate, standard_error, p value (two-tailed test of null)
 }
 \description{
-TBD
+Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals
+and hypothesis tests.
 }
 \examples{
-TBD
+# Example using data from RI package.
+y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+# Generate 10,000 random permutations of the assignment vector.
+perms = ri::genperms(Z, maxiter=10000)
+# Estimate the probability of assignment for each unit and assignment level.
+prob_matrix = createProbMatrix(perms)
+# Estimate the treatment effect using Horvitz-Thompson.
+htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 }
 

@@ -13,9 +13,11 @@ matDiag(mat)
 diagonal elements of the matrix as a vector.
 }
 \description{
-TBD
+Returns the diagonal elements of a matrix as a vector.
 }
 \examples{
-TBD
+myMatrix = matrix(1:9, ncol=3)
+# This returns c(1, 5, 9)
+diagonal = matDiag(myMatrix)
 }
 
