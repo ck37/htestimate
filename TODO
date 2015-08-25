@@ -1,10 +1,10 @@
 TODO
 
 Functionality
-- IN PROGRESS: Support totals in addition to means.
 - IN PROGRESS: Add support for constant treatment effects and sharp null approximations.
 - IN PROGRESS: Support clustering.
 - Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
+- TODO: see if assignment levels can be character strings.
 
 Documentation
 - IN PROGRESS: Add header comments to all functions.
