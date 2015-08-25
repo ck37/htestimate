@@ -1,17 +1,15 @@
 Package: htEstimate
-Type: Package
 Title: Horvitz-Thompson Estimate
 Version: 0.1
 Date: 2015-08-11
-Authors@R: as.person(c(
-  "Chris Kennedy <ck37@berkeley.edu> [aut, cre]",
-  "Joel Middleton <joel.middleton@gmail.com> [aut]"
-))
-URL: http://github.com/ck37/htestimate
+Author:  Chris Kennedy and Joel Middleton
+Maintainer: Chris Kennedy <ck37@berkeley.edu>
 Description: Unbiased estimation for RCTs using Horvitz-Thompson.
-License: What license is it under?
-LazyData: TRUE
-Requires:
+Depends: R (>= 2.10)
+URL: http://github.com/ck37/htestimate
+License: BSD
+LazyData: true
+Imports:
   dplyr
 Suggests:
   crank,
