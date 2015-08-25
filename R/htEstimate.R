@@ -427,10 +427,13 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 }
 
 #' @title Return the diagonal of the matrix.
-#' @description TBD
+#' @description Returns the diagonal elements of a matrix as a vector.
 #' @param mat Input matrix, must be square.
 #' @return diagonal elements of the matrix as a vector.
-#' @examples TBD
+#' @examples
+#' myMatrix = matrix(1:9, ncol=3)
+#' # This returns c(1, 5, 9)
+#' diagonal = matDiag(myMatrix)
 matDiag = function(mat) {
   # Must be a 1x1 vector.
   if (class(mat) != "matrix") {
