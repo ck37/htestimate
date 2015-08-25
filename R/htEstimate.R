@@ -407,9 +407,9 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   # Weighted-sum of variance and covariance terms.
   # TODO: confirm that this use of the contrast weights is correct.
   # I think we don't need to multiply two because we are using both triangles of a symmetric matrix.
- var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
+  var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
 
- # Divide by n^2 if we're not calculating the VAR of totals.
+  # Divide by n^2 if we're not calculating the VAR of totals.
   if (!totals) {
      var = var / n^2
   }

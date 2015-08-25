@@ -158,3 +158,6 @@ probs
 ate <- estate(y,Z,prob=probs) # estimate the ATE
 ate
 
+#################
+# TODO: Check that the Totals estimation is correct.
+
