@@ -7,8 +7,9 @@ Functionality
 - TODO: see if assignment levels can be character strings.
 
 Documentation
-- IN PROGRESS: Add header comments to all functions.
 - Describe the project in Readme.md
+- Add examples to htEstimate roxygen and Readme.md
+- IN PROGRESS: Add header comments to all functions.
 - Make sure all function bodies are well commented.
 
 Testing
