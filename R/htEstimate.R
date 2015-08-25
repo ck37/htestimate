@@ -59,7 +59,7 @@ createProbMatrix = function(raw_assignments, byrow = F) {
     for (row in col:k) {
       dest = getRawMatrixEntries(row, col, n)
       #cat("Start row:", start_row, "End row:", end_row, "Start col:", start_col, "End col:", end_col, "\n")
-      probs = generateAssignmentProbs(row, col, assignments, assignment_levels)
+      probs = generateAssignmentProbs(row, col, assignments)
       #print(probs)
       result[dest$start_row:dest$end_row, dest$start_col:dest$end_col] = probs
     }
@@ -89,14 +89,14 @@ createProbMatrix = function(raw_assignments, byrow = F) {
   return(result)
 }
 
-#' @title TBD
+#' @title Return probability matrix locations for the sub-matrix for a certain observation pair.
 #'
 #' @description TBD
 #'
 #' @param row TBD
 #' @param col TBD
-#' @param n
-#' @param direct
+#' @param n Total number of observations.
+#' @param direct Not yet implemeneted: try to return the ranges for direct usage, rather than a list.
 #' @return TBD
 # Doesn't this need the number of assignments and/or the total number of records? -> No, just n.
 getRawMatrixEntries = function(row, col, n, direct=F) {
@@ -115,15 +115,13 @@ getRawMatrixEntries = function(row, col, n, direct=F) {
 
 #' @title TBD
 #'
-#' @description TBD
+#' @description Used by createProbMatrix.
 #'
-#' @param row TBD
-#' @param col TBD
+#' @param row The assignment level to be used in the row check.
+#' @param col The assignment level to be used in the column check.
 #' @param assignments These have already been mapped to 1..k
-#' @param assign_levels TBD
-#' @return TBD
-generateAssignmentProbs = function(row, col, assignments, assign_levels) {
-  k = length(assign_levels)
+#' @return nxn matrix with joint assignment probabilities.
+generateAssignmentProbs = function(row, col, assignments) {
   n = nrow(assignments)
   replications = ncol(assignments)
 
@@ -133,6 +131,7 @@ generateAssignmentProbs = function(row, col, assignments, assign_levels) {
   # Loop over the matrix.
   for (i in 1:n) {
     for (j in 1:n) {
+      # % of replications where Ai == row and Aj == col.
       probs[j, i] = sum(assignments[i, ] == row & assignments[j, ] == col) / replications
     }
   }
