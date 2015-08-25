@@ -39,8 +39,15 @@ createProbMatrix = function(raw_assignments, byrow = F) {
   k = length(assignment_levels)
   n = nrow(assignments)
 
-  #TODO: throw an error if k == 1
-  #TODO: throw an error if n == 1
+  if (k == 1) {
+    stop("Error: found only 1 assignment level; should be 2 or greater.")
+    # TODO: add a test case to confirm that this check works.
+  }
+
+  if (n == 1) {
+    stop("Error: only 1 observation found; should be 2 or greater.")
+    # TODO: add a test case to confirm that this check works.
+  }
 
   # Matrix to store the results. Initialize all cells to -1 so that we can see errors for easily.
   result = matrix(data=-1, nrow = n*k, ncol=n*k)
@@ -58,11 +65,7 @@ createProbMatrix = function(raw_assignments, byrow = F) {
     }
   }
 
-  #cat("Current matrix after creating lower triangle:\n")
-  #print(result)
-
   # Copy lower triangle to the upper triangle.
-
   for (col in 2:k) {
     for (row in seq(1, col-1)) {
 
