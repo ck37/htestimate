@@ -138,10 +138,10 @@ generateAssignmentProbs = function(row, col, assignments) {
   return(probs)
 }
 
-#' @title Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals
-#' and hypothesis tests.
+#' @title  Unbiased treatment effect estimation with Horvitz-Thompson
 #'
-#' @description TBD
+#' @description Produce Horvitz-Thompson estimators of treatment assignment with standard error estimates, confidence intervals
+#' and hypothesis tests.
 #'
 #' @param outcome Outcome vector for a given experiment.
 #' @param assignment Assignment vector for the experiment.
@@ -155,8 +155,19 @@ generateAssignmentProbs = function(row, col, assignments) {
 #' @param totals Calculate outcome totals rather than means, defaults to False.
 #' @param cluster_id Cluster identifier, if data is in clusters. Outcomes will then be converted to cluster-totals.
 #' @return estimate, standard_error, p value (two-tailed test of null)
+#'
 #' @examples
-#' TBD
+#'
+#' # Example using data from RI package.
+#' y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+#' Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+#' # Generate 10,000 random permutations of the assignment vector.
+#' perms = ri::genperms(Z, maxiter=10000)
+#' # Estimate the probability of assignment for each unit and assignment level.
+#' prob_matrix = createProbMatrix(perms)
+#' # Estimate the treatment effect using Horvitz-Thompson.
+#' htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+#'
 htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs", totals = F, cluster_id = NULL) {
 
   # Prepare some basic variables.
