@@ -416,8 +416,6 @@ htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   se = sqrt(var)
 
   # 3. Calculate the probability using the normal distribution.
-  # TODO: should this be different isfwe are estimating totals rather than means?
-  # TODO: E.g., should we multiply the se by n?
   p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.
