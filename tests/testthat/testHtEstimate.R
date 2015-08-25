@@ -130,7 +130,7 @@ result$estimate == ri_ate
 perms_100k = genperms(Z, maxiter=100000)
 # It stops at 43,758 because that is all of the permutations.
 choose(18, 10)
-prob_matrix_100k = createProbMatrix(perms2)
+prob_matrix_100k = createProbMatrix(perms_100k)
 result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix_100k)
 result
 
