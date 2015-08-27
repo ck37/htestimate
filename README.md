@@ -4,7 +4,7 @@ Htestimate calculates unbiased estimates of treatment effects from randomized tr
 
 This package is currently under development so bug reports and feature requests are encouraged.
 
-# Install
+## Install
 
 Install directly from github using devtools (install.packages("devtools") if you don't already have devtools):
 ```{r}
@@ -13,11 +13,11 @@ install_github("ck37/htestimate")
 library(htestimate)
 ```
 
-# Requirements
+## Requirements
 
 R packages: dplyr
 
-# Examples
+## Examples
 
 ```{r}
 # Example using data from RI package.
@@ -31,7 +31,7 @@ prob_matrix = createProbMatrix(perms)
 htestimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 ```
 
-# References
+## References
 
 Aronow, P. M., & Middleton, J. A. (2013). A class of unbiased estimators of the average treatment effect in randomized experiments. Journal of Causal Inference, 1(1), 135-154.
 
