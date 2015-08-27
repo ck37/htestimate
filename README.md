@@ -4,6 +4,19 @@ Htestimate calculates unbiased estimates of treatment effects from randomized tr
 
 This package is currently under development so bug reports and feature requests are encouraged.
 
+# Install
+
+Install directly from github using devtools (install.packages("devtools") if you don't already have devtools):
+```{r}
+library(devtools)
+install_github("ck37/htestimate")
+library(htestimate)
+```
+
+# Requirements
+
+R packages: dplyr
+
 # Examples
 
 ```{r}
