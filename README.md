@@ -1,1 +1,29 @@
 # htestimate
+
+Htestimate calculates unbiased estimates of treatment effects from randomized trials when the random assignment is correlated across units, e.g. under clustered randomization (Middleton 2008) or under rerandomization (Morgan & Rubin 2012), by using the Horvitz-Thompson estimator. It produces a standard error and p-value of that effect estimate. Differences in outcome totals rather than means can also be produced.
+
+This package is currently under development so bug reports and feature requests are encouraged.
+
+# Examples
+
+```{r}
+# Example using data from RI package.
+y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+# Generate 10,000 random permutations of the assignment vector.
+perms = ri::genperms(Z, maxiter=10000)
+# Estimate the probability of assignment for each unit and assignment level.
+prob_matrix = createProbMatrix(perms)
+# Estimate the treatment effect using Horvitz-Thompson.
+htestimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+```
+
+# References
+
+Aronow, P. M., & Middleton, J. A. (2013). A class of unbiased estimators of the average treatment effect in randomized experiments. Journal of Causal Inference, 1(1), 135-154.
+
+Middleton, J. A. (2008). Bias of the regression estimator for experiments using clustered random assignment. Statistics & Probability Letters, 78(16), 2654-2659.
+
+Morgan, K. L., & Rubin, D. B. (2012). Rerandomization to improve covariate balance in experiments. The Annals of Statistics, 40(2), 1263-1282.
+
+Särndal, C. E., Swensson, B., & Wretman, J. (2003). Model assisted survey sampling. Springer Science & Business Media.
