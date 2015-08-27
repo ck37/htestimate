@@ -1,5 +1,6 @@
 library(testthat) # For the context() function, in case we run this file manually.
 library(crank) # We use the permute() function.
+library(ri)
 
 # Create test matrix 1 per the PDF document.
 arms1 = 1:3
@@ -43,3 +44,11 @@ context("Off-Diagonal")
 # Check lower triangle.
 
 # Confirm that base matrix is symmetric.
+
+context("RI example 1")
+y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+perms = genperms(z, maxiter=10000)
+# This should not give us any errors.
+prob_matrix = createProbMatrix(perms)
+prob_matrix
