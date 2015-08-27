@@ -1,4 +1,4 @@
 library(testthat)
-library(htEstimate)
+library(htestimate)
 
-test_check("htEstimate")
+test_check("htestimate")
