@@ -19,6 +19,19 @@ Return a matrix of probabilities and joint probabilities of assignment for n
 observations and k randomization replications.
 }
 \examples{
-TBD
+# Create test matrix 1 per the PDF document.
+arms1 = 1:3
+# We transpose the results so that each permutation is a column.
+testmat1 = t(crank::permute(arms1))
+# Display the simple test matrix.
+testmat1
+prob_matrix = createProbMatrix(testmat1)
+
+# RI package example, but without blocking or clustering.
+y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+# Create 10k random permutations of the assignment vector.
+perms = ri::genperms(z, maxiter=10000)
+prob_matrix = createProbMatrix(perms)
 }
 
