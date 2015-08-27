@@ -17,3 +17,7 @@ Testing
 - Test a probability matrix based on re-randomization (ri package or otherwise)
 - Compare HT results to those of additional packages (samplingVarEst, SamplingBook)
 - Add more test cases.
+
+Performance
+- Benchmark performance on a large example.
+- Vectorize more of the operations and/or use matrix operations.
