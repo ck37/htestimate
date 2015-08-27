@@ -1,8 +1,8 @@
 # htestimate
 
-Htestimate calculates unbiased estimates of treatment effects from randomized trials when the random assignment is correlated across units, e.g. under clustered randomization (Middleton 2008) or under rerandomization (Morgan & Rubin 2012), by using the Horvitz-Thompson estimator. It produces a standard error and p-value of that effect estimate. Differences in outcome totals rather than means can also be produced.
+Htestimate calculates unbiased estimates of treatment effects from randomized trials when the random assignment is correlated across units, using the Horvitz-Thompson estimator (Särndal et al. 2003, section 2.8). Standard approaches to RCT evaluation (difference in means and regression) are generally biased under clustered randomization (Middleton 2008) or under rerandomization (Morgan & Rubin 2012), for example. In addition to the treatment effect the package produces a standard error and p-value of that effect estimate. Differences in outcome totals rather than means can also be produced. Any number of experimental arms/conditions are allowed.
 
-This package is currently under development so bug reports and feature requests are encouraged.
+This package is currently under active development so bug reports and feature requests are encouraged.
 
 ## Install
 
