@@ -31,13 +31,13 @@ outcome
 rand_column = sample(ncol(testmat1), 1)
 assignment = testmat1[, rand_column]
 assignment
-# Make a copy equal to the internal argument of htEstimate, to help with debugging.
+# Make a copy equal to the internal argument of htestimate, to help with debugging.
 raw_assignment = assignment
 
 # Compare assignment 1 to assignment 2.
 contrasts = c(1, -1, 0)
 approx = "youngs"
-result = htEstimate(outcome, assignment, contrasts, prob_matrix)
+result = htestimate(outcome, assignment, contrasts, prob_matrix)
 # This result is an estimate of 0.93 and p-value of 0.545. Actually, now we're getting 0.607 as the p-value??
 result
 
@@ -107,16 +107,16 @@ all.equal(prob_matrix, prob_matrix2)
 # Examine the 1x1 matrix in the upper left.
 prob_matrix[1:18, 1:18]
 
-# Examine the htEstimate results.
+# Examine the htestimate results.
 outcome = y
 raw_assignment = z_ck
 contrasts = c(-1, 1)
 table(raw_assignment)
 # This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
-result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+result = htestimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 result
 # This version keeps the original 0, 1 assignment levels.
-result2 = htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
+result2 = htestimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
 result2
 
 # These should be true.
@@ -131,7 +131,7 @@ perms_100k = genperms(Z, maxiter=100000)
 # It stops at 43,758 because that is all of the permutations.
 choose(18, 10)
 prob_matrix_100k = createProbMatrix(perms_100k)
-result = htEstimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix_100k)
+result = htestimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix_100k)
 result
 
 # Retry with RI.

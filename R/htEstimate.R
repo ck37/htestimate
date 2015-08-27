@@ -166,9 +166,9 @@ generateAssignmentProbs = function(row, col, assignments) {
 #' # Estimate the probability of assignment for each unit and assignment level.
 #' prob_matrix = createProbMatrix(perms)
 #' # Estimate the treatment effect using Horvitz-Thompson.
-#' htEstimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+#' htestimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 #'
-htEstimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs", totals = F, cluster_id = NULL) {
+htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs", totals = F, cluster_id = NULL) {
 
   # Prepare some basic variables.
 
