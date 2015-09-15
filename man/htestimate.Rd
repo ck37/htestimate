@@ -18,7 +18,7 @@ htestimate(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs",
 Default: "youngs" - Youngs inequality (see Aronow and Middleton).
 Other options:
 "constant effects" - constant effects assumption (See Aronow dissertation section 2.5),
-"sharp null" - sharp null hypothesis (a special case of #' the constant effects assumption).}
+"sharp null" - sharp null hypothesis (a special case of the constant effects assumption).}
 
 \item{totals}{Calculate outcome totals rather than means, defaults to False.}
 

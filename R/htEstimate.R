@@ -165,7 +165,7 @@ generateAssignmentProbs = function(row, col, assignments) {
 #' Default: "youngs" - Youngs inequality (see Aronow and Middleton).
 #' Other options:
 #' "constant effects" - constant effects assumption (See Aronow dissertation section 2.5),
-#' "sharp null" - sharp null hypothesis (a special case of #' the constant effects assumption).
+#' "sharp null" - sharp null hypothesis (a special case of the constant effects assumption).
 #' @param totals Calculate outcome totals rather than means, defaults to False.
 #' @param cluster_id Cluster identifier, if data is in clusters. Outcomes will then be converted to cluster-totals.
 #' @return estimate, standard_error, p value (two-tailed test of null)
