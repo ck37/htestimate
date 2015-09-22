@@ -318,7 +318,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
 
   # Loop over each assignment level and calculate the variance of the total.
-  # Actually, this is equation UEATE#32.
+  # Actually, this is equation CUEATE#32.
   # TODO: generalize EQ#32 to multiple treatment arms for reference.
   variance_of_totals = rep(NA, k)
   covariances = matrix(nrow=k, ncol=k)
@@ -452,6 +452,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   se = sqrt(var)
 
   # 3. Calculate the probability using the normal distribution.
+  # TODO: could we use RI or something else as another way to generate the p-value?
   p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.
