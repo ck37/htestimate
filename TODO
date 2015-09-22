@@ -5,6 +5,7 @@ Functionality
 - IN PROGRESS: Support clustering.
 - Other extensions listed in the PDF: covariate adjustment, LATE, Hajek estimator, Ratio estimation.
 - TODO: see if assignment levels can be character strings.
+- Pretty print of the estimation result.
 
 Documentation
 - Describe the project in Readme.md
