@@ -17,9 +17,9 @@ testmat1_k = length(unique(arms1))
 context("Simple test case")
 
 # Here we set the internal arguments to createProbMatrix to ease in debugging.
-raw_assignments = testmat1
+assignments = testmat1
 byrow = F
-prob_matrix = createProbMatrix(raw_assignments = raw_assignments, byrow = byrow)
+prob_matrix = createProbMatrix(assignments = assignments, byrow = byrow)
 prob_matrix
 
 set.seed(4976401)
@@ -31,8 +31,6 @@ outcome
 rand_column = sample(ncol(testmat1), 1)
 assignment = testmat1[, rand_column]
 assignment
-# Make a copy equal to the internal argument of htestimate, to help with debugging.
-raw_assignment = assignment
 
 # Compare assignment 1 to assignment 2.
 contrasts = c(1, -1, 0)
@@ -109,9 +107,9 @@ prob_matrix[1:18, 1:18]
 
 # Examine the htestimate results.
 outcome = y
-raw_assignment = z_ck
+assignment = z_ck
 contrasts = c(-1, 1)
-table(raw_assignment)
+table(assignment)
 # This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
 result = htestimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 result

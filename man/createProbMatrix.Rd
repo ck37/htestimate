@@ -4,12 +4,12 @@
 \alias{createProbMatrix}
 \title{Probabilities and joint probabilities of assignment.}
 \usage{
-createProbMatrix(raw_assignments, byrow = F)
+createProbMatrix(assignments, byrow = F)
 }
 \arguments{
-\item{byrow}{Change the assignment matrix to use rows rather than columns for each randomization.}
-
 \item{assignments}{Each column is a replication and each element is the unit's assignment.}
+
+\item{byrow}{Change the assignment matrix to use rows rather than columns for each randomization.}
 }
 \value{
 n*k by n*k matrix of probabilities and joint probabilities of assignment to each arm.

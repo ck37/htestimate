@@ -4,11 +4,13 @@
 \alias{htestimate}
 \title{Unbiased treatment effect estimation with Horvitz-Thompson}
 \usage{
-htestimate(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs",
+htestimate(outcome, assignment, contrasts, prob_matrix, approx = "youngs",
   totals = F, cluster_id = NULL)
 }
 \arguments{
 \item{outcome}{Outcome vector for a given experiment.}
+
+\item{assignment}{Assignment vector for the experiment.}
 
 \item{contrasts}{A list of contasts. For example could be c(-1, 1, 0) for the above example if we wanted to compare treatment 1 to treatment 2. But in a factorial design, for example, we might want to compute the AMCE (see Hainmueller et al.). For example, if we had a 2x2x2 factorial design (8 treatment arms) and we wanted to look at an AMCE we might specify c(0.25, -0.25, 0.25, -0.25, 0.25, -0.25, 0.25, - 0.25) and the elements of the treatment vector should be ti 2 {1,2,3,4,5,6,7,8}}
 
@@ -23,8 +25,6 @@ Other options:
 \item{totals}{Calculate outcome totals rather than means, defaults to False.}
 
 \item{cluster_id}{Cluster identifier, if data is in clusters. Outcomes will then be converted to cluster-totals.}
-
-\item{assignment}{Assignment vector for the experiment.}
 }
 \value{
 estimate, standard_error, p value (two-tailed test of null)

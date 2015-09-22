@@ -24,8 +24,11 @@ library(dplyr) # Used in htEstimate for the cluster aggregation.
 #' perms = ri::genperms(z, maxiter=10000)
 #' prob_matrix = createProbMatrix(perms)
 #'
-createProbMatrix = function(raw_assignments, byrow = F) {
+createProbMatrix = function(assignments, byrow = F) {
   # Return a n * k by n * k matrix.
+
+  # Rename the original version of the assignments before we re-number the assignment levels (potentially).
+  raw_assignments = assignments
 
   if (byrow) {
     # Transpose the assignment matrix if byrow is true.
@@ -45,7 +48,7 @@ createProbMatrix = function(raw_assignments, byrow = F) {
     assign_dict[[as.character(assignment_levels[i])]] = i
   }
 
-  # Now create a clean_assignment field with consecutive natural numbers.
+  # Now create a clean assignment field with consecutive natural numbers.
   assignments = apply(raw_assignments, MARGIN=c(1, 2), FUN=function(x) { assign_dict[[as.character(x)]] })
 
   # Determine the number of assignments by looking at the unique arms in the first replication.
@@ -182,7 +185,10 @@ generateAssignmentProbs = function(row, col, assignments) {
 #' # Estimate the treatment effect using Horvitz-Thompson.
 #' htestimate(y, z, contrasts = c(-1, 1), prob_matrix = prob_matrix)
 #'
-htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = "youngs", totals = F, cluster_id = NULL) {
+htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "youngs", totals = F, cluster_id = NULL) {
+
+  # Rename the original version of the assignments before we renumber the assignment levels (potentially).
+  raw_assignment = assignment
 
   # Prepare some basic variables.
 
@@ -223,7 +229,7 @@ htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
     assign_dict[[as.character(raw_assignment_levels[i])]] = i
   }
 
-  # Now create a clean_assignment field with consecutive natural numbers.
+  # Now create a clean assignment field with consecutive natural numbers.
   # Here we just need to loop over elements, because it's an array rather than a matrix as in createProbMatrix.
   # That's why we use sapply here.
   assignment = sapply(raw_assignment, FUN=function(x) { assign_dict[[as.character(x)]] })
@@ -318,6 +324,7 @@ htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
   covariances = matrix(nrow=k, ncol=k)
   for (assign_a in 1:k) {
     # TODO: use level_a when the assignment levels are not 1:k
+    # Actually - we have already renumbered the assignment levels so this is probably not needed.
     level_a = assignment_levels[assign_a]
     running_sum = 0
     #cat("Assign_a:", assign_a, "Level_a:", level_a, "\n")
@@ -327,6 +334,7 @@ htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
       #cat("Assignment level:", level_a, "Observation:", obs_k)
       # Pi_ai is the non-joint assignment probability of this unit to this assignment level/arm.
       # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
+      # TODO: should we be using level_a here?
       cells = getRawMatrixEntries(assign_a, assign_a, n)
       #cat("Cells:\n")
       #print(cells)
@@ -433,6 +441,7 @@ htestimate = function(outcome, raw_assignment, contrasts, prob_matrix, approx = 
 
   # Weighted-sum of variance and covariance terms.
   # TODO: confirm that this use of the contrast weights is correct.
+  # The general formula is from https://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables
   # I think we don't need to multiply two because we are using both triangles of a symmetric matrix.
   var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
 
