@@ -282,16 +282,16 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     #cat("Outcomes: (", n_obs, ")\n")
     #print(outcome[assignment == assignment_level])
     #cat("Diag of weights:\n")
-    #print(matDiag(weights))
+    #print(diag(weights))
 
     # Calculate the inverse-probability weighted total.
     # This doesn't work correctly - commenting out and running in a loop for now.
-    # outcome_totals[i] = outcome[assignment == assignment_level] / matDiag(weights)
+    # outcome_totals[i] = outcome[assignment == assignment_level] / diag(weights)
     # Do it slower for debugging.
     # TODO: convert to dot product?
     outcome_totals[i] = 0
     for (diag_i in 1:n_obs) {
-      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / matDiag(weights)[diag_i]
+      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / diag(weights)[diag_i]
     }
     #cat("Outcome totals:\n")
     #print(outcome_totals[i])
@@ -459,36 +459,6 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   # We include the variances and covariances for debugging purposes only.
   result = list(estimate=estimate, std_err=se, p_value=p_value, variances=variance_of_totals, covariances=covariances)
   return(result)
-}
-
-#' @title Return the diagonal of the matrix.
-#' @description Returns the diagonal elements of a matrix as a vector.
-#' @param mat Input matrix, must be square.
-#' @return diagonal elements of the matrix as a vector.
-#' @examples
-#' myMatrix = matrix(1:9, ncol=3)
-#' # This returns c(1, 5, 9)
-#' diagonal = matDiag(myMatrix)
-matDiag = function(mat) {
-  # Must be a 1x1 vector.
-  if (class(mat) != "matrix") {
-    if (length(mat) == 1) {
-      return(mat[1])
-    } else {
-      throw("Input argument is not a matrix")
-    }
-  }
-  if (dim(mat)[1] != dim(mat)[2]) {
-    throw("Diagonal is only defined on square matrices.")
-  }
-
-  # Allocate our results first so that we don't have to resize the vector.
-  diag = rep(0, dim(mat)[1])
-
-  for (i in 1:dim(mat)[1]) {
-    diag[i] = mat[i, i]
-  }
-  return(diag)
 }
 
 # New function to randomly permute assignments within blocks, after aggregating to cluster totals.
