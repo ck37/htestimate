@@ -331,7 +331,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         else {
           # Otherwise we need to calculate tau-hat and use it to impute the unobserved potential outcome.
           # TODO: if we assume no effect, tau-hat is zero here.
-          temp_outcome = outcome[i] + (outcome_totals[k] - outcome_totals[i])/n
+          temp_outcome = outcome[i] + (outcome_totals[k] - outcome_totals[assignment[i]])/n
         }
         potential_outcomes[i, k] = temp_outcome
       }
