@@ -305,8 +305,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # Calculate the difference in totals.
     # TODO: confirm this is the correct way with Joel.
     estimate = sum(outcome_totals * contrasts)
-  }
-  else {
+  } else {
     # Calculate the difference in means (default).
     estimate = sum(outcome_totals * contrasts) / n
   }
@@ -325,15 +324,14 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     for (unit_i in 1:n) {
       for (assign_a in 1:k) {
         # Use the observed value if it exists.
-        if (assignment[i] == k) {
-          temp_outcome = outcome[i]
-        }
-        else {
+        if (assignment[unit_i] == assign_a) {
+          temp_outcome = outcome[unit_i]
+        } else {
           # Otherwise we need to calculate tau-hat and use it to impute the unobserved potential outcome.
           # TODO: if we assume no effect, tau-hat is zero here.
-          temp_outcome = outcome[i] + (outcome_totals[k] - outcome_totals[assignment[i]])/n
+          temp_outcome = outcome[unit_i] + (outcome_totals[assign_a] - outcome_totals[assignment[unit_i]])/n
         }
-        potential_outcomes[i, k] = temp_outcome
+        potential_outcomes[unit_i, assign_a] = temp_outcome
       }
     }
     rm(temp_outcome)
