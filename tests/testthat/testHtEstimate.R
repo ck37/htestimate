@@ -109,17 +109,23 @@ prob_matrix[1:18, 1:18]
 outcome = y
 assignment = z_ck
 contrasts = c(-1, 1)
+totals = F
 table(assignment)
 # This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
-result = htestimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix)
+result = htestimate(y, z_ck, contrasts = contrasts, prob_matrix = prob_matrix)
 result
 # This version keeps the original 0, 1 assignment levels.
-result2 = htestimate(y, Z, contrasts = c(-1, 1), prob_matrix = prob_matrix2)
+result2 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2)
 result2
 
 # These should be true.
 unlist(result) == unlist(result2)
 all.equal(unlist(result), unlist(result2))
+
+# Constant treatment effects test.
+approx = "constant effects"
+result3 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
+result3
 
 # ERROR: we are getting slightly different estimate results. What's the deal??
 result$estimate == ri_ate
