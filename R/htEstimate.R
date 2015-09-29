@@ -316,6 +316,29 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # Calculate all needed covarianaces - we will use a weighted sum of their totals.
 
+  # If we assume constant effects we need to calculate potential outcomes for each outcome and assignment pair.
+  if (approx == "constant effects") {
+    # Create an n by k matrix to store the potential outcomes.
+    potential_outcomes = matrix(nrow=n, ncol=k)
+
+    # Loop over each unit and assignment.
+    for (unit_i in 1:n) {
+      for (assign_a in 1:k) {
+        # Use the observed value if it exists.
+        if (assignment[i] == k) {
+          temp_outcome = outcome[i]
+        }
+        else {
+          # Otherwise we need to calculate tau-hat and use it to impute the unobserved potential outcome.
+          # TODO: if we assume no effect, tau-hat is zero here.
+          temp_outcome = outcome[i] + (outcome_totals[k] - outcome_totals[i])/n
+        }
+        potential_outcomes[i, k] = temp_outcome
+      }
+    }
+    rm(temp_outcome)
+  }
+
 
   # Loop over each assignment level and calculate the variance of the total.
   # Actually, this is equation CUEATE#32.
@@ -343,12 +366,18 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
       # Equation: UEATE#32, first component.
       # T'k(1 - pi_1k)*(Y_k/Pi_1k)^2
       # TODO: Does this need to check if pi_indiv == 0?? Doesn't seem to in the formula.
-      first_component = (assignment[obs_k] == assign_a) * (1 - pi_ak)*(outcome[k]/pi_ak)^2
+      if (approx == "youngs") {
+        first_component = (assignment[obs_k] == assign_a) * (1 - pi_ak)*(outcome[k]/pi_ak)^2
+      }
+      else if (approx == "constant effects") {
+        # Aronow dissertation, Eq 2.15 (p. 18); line 1.
+        first_component = pi_ak * (1 - pi_ak) * (potential_outcomes[k] / pi_ak)^2
+      }
 
       #individual_component = pi_individual * (1 - pi_individual) * (outcome[i]/pi_individual)^2
       running_sum = running_sum + first_component
 
-      # Second and third components of equation 32
+      # Youngs: Second and third components of equation 32.
       for (obs_l in 1:n) {
         # Skip this iteration if i == j
         if (obs_k == obs_l) next
@@ -360,27 +389,24 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         # TODO: confirm if we should use j or assign_i here.
         #cells = getRawMatrixEntries(assign_i, assign_i, n)
         pi_ak_al = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_l]
-
-        if (pi_ak_al > 0) {
-          # Option 1: pi_ij > 0
-          # Second component of equation 32.
-          joint_component = (assignment[obs_k] == assign_a)*(assignment[obs_l] == assign_a) / pi_ak_al *
-            (pi_ak_al - pi_ak * pi_al) * outcome[obs_k] / pi_ak * outcome[obs_l] / pi_al
-        } else {
-          # Option 2: pi_ij = 0
-          # Third component of equation 32.
-          # This is young's equality right now.
-          # TODO: support constant effects variance estimation (Aronow diss 2.5)
-          # TODO: support sharp null hypothesis.
-          if (approx == "youngs") {
-            joint_component = (assignment[obs_k] == assign_a) * outcome[obs_k]^2/(2*pi_ak)
-              + (assignment[obs_l] == assign_a) * outcome[obs_l]^2/(2*pi_al)
-          } else if (approx == "constant effects") {
-            # TODO: implementation here.
-          } else if (approx == "sharp null") {
-            # TODO: implementation here.
+        if (approx == "youngs") {
+          if (pi_ak_al > 0) {
+            # Option 1: pi_ij > 0
+            # Second component of equation 32.
+            joint_component = (assignment[obs_k] == assign_a)*(assignment[obs_l] == assign_a) / pi_ak_al *
+              (pi_ak_al - pi_ak * pi_al) * outcome[obs_k] / pi_ak * outcome[obs_l] / pi_al
+          } else {
+            # Option 2: pi_ij = 0
+            # Third component of equation 32.
+            # This is young's equality right now.
+              joint_component = (assignment[obs_k] == assign_a) * outcome[obs_k]^2/(2*pi_ak)
+                + (assignment[obs_l] == assign_a) * outcome[obs_l]^2/(2*pi_al)
           }
+        } else if (approx == "constant effects") {
+          # Arornow diss, EQ 2.15 (p. 18) line 2
+          joint_component = (pi_ak_al - pi_ak * pi_al) * potential_outcomes[obs_k, assign_a] / pi_ak * potential_outcomes[obs_l, assign_a] / pi_al
         }
+        # TODO: support no effect assumption.
 
         running_sum = running_sum + joint_component
       }
@@ -415,21 +441,28 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           cells = getRawMatrixEntries(assign_b, assign_b, n)
           pi_bl = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_l, obs_l]
 
-          # TODO: need to review this equation, not sure if it's right.
-          # Esp. the assignment[j] == assign_j part.
-          # Equation #34 HERE (youngs inequality):
-          # First component:
-          cov_running_sum = cov_running_sum + (assignment[obs_k] == assign_a) * (assignment[obs_l] == assign_b) /
+          if (approx == "youngs") {
+            # TODO: need to review this equation, not sure if it's right.
+            # Esp. the assignment[j] == assign_j part.
+            # Equation #34 HERE (youngs inequality):
+            # First component:
+            cov_running_sum = cov_running_sum + (assignment[obs_k] == assign_a) * (assignment[obs_l] == assign_b) /
             pi_ak_bl * (pi_ak_bl - pi_ak * pi_bl) * outcome[obs_k] * outcome[obs_l] / (pi_ak * pi_bl)
+          } else if (approx == "constant effects") {
+            # Aronow diss Eq. 2.15 (p. 18) line 5 (effectively also includes line 6).
+            cov_running_sum = cov_running_sum + (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / pi_ak_bl
+          }
         }
 
-        # Eq#34 second component:
-        cov_running_sum = cov_running_sum - (assign_a == assignment[obs_k]) * outcome[obs_k]^2 / (2 * pi_ak)
+        if (approx == "youngs") {
+          # Eq#34 second component:
+          cov_running_sum = cov_running_sum - (assign_a == assignment[obs_k]) * outcome[obs_k]^2 / (2 * pi_ak)
 
-        # Eq#34 third component:
-        cells = getRawMatrixEntries(assign_b, assign_b, n)
-        pi_bk = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
-        cov_running_sum = cov_running_sum - (assign_b == assignment[obs_k]) * outcome[obs_k]^2 / (2 * pi_bk)
+          # Eq#34 third component:
+          cells = getRawMatrixEntries(assign_b, assign_b, n)
+          pi_bk = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
+          cov_running_sum = cov_running_sum - (assign_b == assignment[obs_k]) * outcome[obs_k]^2 / (2 * pi_bk)
+        }
       }
       covariances[assign_a, assign_b] = cov_running_sum
 
