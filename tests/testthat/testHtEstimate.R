@@ -127,6 +127,11 @@ approx = "constant effects"
 result3 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
 result3
 
+# Sharp null test.
+approx = "sharp null"
+result4 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
+result4
+
 # ERROR: we are getting slightly different estimate results. What's the deal??
 result$estimate == ri_ate
 
