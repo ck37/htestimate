@@ -170,3 +170,59 @@ ate
 #################
 # TODO: Check that the Totals estimation is correct.
 
+#################
+# Test 4. CUA example (table 1, p. 147), WITH blocking AND clustering.
+y = c(1,1,1,1,1,0,1,1,0,1,1,1,1,0,0,0)
+cluster = c(1,1,2,2,3,4,5,5,5,6,6,7,7,8,9,10)
+block = c(rep(1, 6), rep(2, 10))
+x = c(4,0,4,1,4,2,4,1,2,5,4,1,4,2,2,3)
+
+data = data.frame(cbind(block, cluster, x, y))
+data = data.frame(block, cluster, x, y)
+
+# Collapse to the cluster level before performing randomization.
+library(dplyr)
+data_clusters = distinct(data, cluster) %>% select(block, cluster)
+data_clusters
+
+# Generate many possible blocked random assignments; each is a column.
+library(randomizr)
+set.seed(1)
+# Assign 2 units to treatment per block (50% chance in 1st block, 33% chance in 2nd block)
+block_m = rbind(c(2, 2),
+                 c(4, 2))
+reps = replicate(900, block_ra(data_clusters$block, block_m = block_m, condition_names = c("control", "treatment")))
+# Set margin=2 so that matrix is unique by column (assignment permutation) rather than row.
+cluster_perms = unique(reps, MARGIN=2)
+# We expect and do get 90 unique possible assignments.
+dim(cluster_perms)
+
+# Review the Pi_1i's by cluster - probability of being assigned treatment.
+# These should be 0.5 for the first 4 clusters then 0.333 for the last 6.
+apply(cluster_perms, MARGIN=1, FUN=function(x){mean(x == "treatment")})
+
+# Expand the cluster assignment to the unit level.
+assign_perms = apply(cluster_perms, MARGIN=2, FUN=function(assignment) {
+  assign_df = data.frame(cluster=unique(data$cluster), assignment)
+  unit_assignment = merge(data, assign_df, by="cluster")
+  as.numeric(as.factor(unit_assignment$assignment))
+})
+# We should have a 16x90 matrix of assignment permutations at the unit level.
+dim(assign_perms)
+
+# Confirm that our treatment assignment probabilities remain 0.5 and then 1/3.
+apply(assign_perms, MARGIN=1, FUN=function(x){mean(x == "treatment")})
+apply(assign_perms, MARGIN=1, FUN=function(x){mean(x == 2)})
+
+# This should give us a 32x32 matrix of assignment probabilities.
+prob_matrix = createProbMatrix(assign_perms)
+dim(prob_matrix)
+
+# Loop over each possible assignment permutation.
+results = list()
+for (i in 1:ncol(assign_perms)) {
+  assignment = assign_perms[, i]
+  # Calculate the HT estimate of the treatment effect.
+  results[[i]] = htestimate(y, assignment, contrasts=c(-1, 1), prob_matrix)
+}
+
