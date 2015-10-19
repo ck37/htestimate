@@ -452,14 +452,25 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
             # TODO: need to review this equation, not sure if it's right.
             # Esp. the assignment[j] == assign_j part.
             # Equation #34 HERE (youngs inequality):
+
+            # Per CUE, p. 147 if the probability is 0 then we set Pi_hat to 1 to avoid dividing by zero.
+            pi_ak_bl_epp = ifelse(pi_ak_bl == 0, 1, pi_ak_bl)
+
             # First component:
-            cov_running_sum = cov_running_sum + (assignment[obs_k] == assign_a) * (assignment[obs_l] == assign_b) /
-            pi_ak_bl * (pi_ak_bl - pi_ak * pi_bl) * outcome[obs_k] * outcome[obs_l] / (pi_ak * pi_bl)
+            first_component = (assignment[obs_k] == assign_a) * (assignment[obs_l] == assign_b) /
+              pi_ak_bl_epp * (pi_ak_bl - pi_ak * pi_bl) * outcome[obs_k] * outcome[obs_l] / (pi_ak * pi_bl)
+            if (is.nan(first_component)) {
+              cat("Generated NaN in cov calculation. assign_a=", assign_a, "assign_b=", assign_b, "obs_k=", obs_k
+                  , "obs_l=", obs_l, "Pi_ak=", pi_ak, "Pi_bl=", pi_bl, "Pi_ak_bl=", pi_ak_bl,"\n")
+            }
+            cov_running_sum = cov_running_sum + first_component
           } else if (approx %in% c("constant effects", "sharp null")) {
             # TODO 10/13/15: confirm that we can use the sharp null here.
 
             # Aronow diss Eq. 2.15 (p. 18) line 5 (effectively also includes line 6).
-            cov_running_sum = cov_running_sum + (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / pi_ak_bl
+            # TODO: do we need to handle a potential zero for pi_ak_bl due to clustering here? E.g. replace with a 1?
+            first_component = (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / pi_ak_bl
+            cov_running_sum = cov_running_sum + first_component
           }
         }
 
@@ -474,7 +485,6 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         }
       }
       covariances[assign_a, assign_b] = cov_running_sum
-
     }
   }
 

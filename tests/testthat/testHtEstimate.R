@@ -235,7 +235,9 @@ for (i in 1:ncol(assign_perms)) {
   results[[i]] = htestimate(y, assignment, contrasts=c(-1, 1), prob_matrix)
 }
 
-# ERROR: we are getting NAs for the covariances - need to figure out why and fix this.
+head(results)
+
+# ERROR: we are getting NaNs for some of the std errors, presumably because the variance is negative :/.
 
 # Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
 mean(sapply(results, FUN=function(x){x$estimate}))
