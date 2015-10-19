@@ -227,12 +227,16 @@ apply(assign_perms, MARGIN=1, FUN=function(x){ mean(x == 2) })
 prob_matrix = createProbMatrix(assign_perms)
 dim(prob_matrix)
 
+# We set these two variables for debugging within the function.
+contrasts = c(-1, 1)
+outcome = y
+
 # Loop over each possible assignment permutation.
 results = list()
-for (i in 1:ncol(assign_perms)) {
-  assignment = assign_perms[, i]
+for (perm_i in 1:ncol(assign_perms)) {
+  assignment = assign_perms[, perm_i]
   # Calculate the HT estimate of the treatment effect.
-  results[[i]] = htestimate(y, assignment, contrasts=c(-1, 1), prob_matrix)
+  results[[perm_i]] = htestimate(y, assignment, contrasts=contrasts, prob_matrix)
 }
 
 head(results)
