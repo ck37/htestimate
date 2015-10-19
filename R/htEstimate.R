@@ -291,7 +291,14 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # TODO: convert to dot product?
     outcome_totals[i] = 0
     for (diag_i in 1:n_obs) {
-      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / diag(weights)[diag_i]
+      # If there is only one observation with this level we need a simply syntax because weights is
+      # a scalar value rather than a matrix, so diag() does not work properly.
+      if (n_obs > 1) {
+        wgt = diag(weights)[diag_i]
+      } else {
+        wgt = weights
+      }
+      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / wgt
     }
     #cat("Outcome totals:\n")
     #print(outcome_totals[i])
