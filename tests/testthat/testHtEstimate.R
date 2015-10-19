@@ -35,7 +35,7 @@ assignment
 # Compare assignment 1 to assignment 2.
 contrasts = c(1, -1, 0)
 approx = "youngs"
-result = htestimate(outcome, assignment, contrasts, prob_matrix)
+result = htestimate(outcome, assignment, contrasts, prob_matrix, approx=approx)
 # This result is an estimate of 0.93 and p-value of 0.545. Actually, now we're getting 0.607 as the p-value??
 result
 
@@ -132,7 +132,7 @@ approx = "sharp null"
 result4 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
 result4
 
-# ERROR: we are getting slightly different estimate results. What's the deal??
+# We are getting slightly different estimate results, but this is due to the # of permutations being small.
 result$estimate == ri_ate
 
 # Try with 100k perms
@@ -166,6 +166,8 @@ probs <- genprobexact(Z,blockvar=block, clustvar=cluster) # probability of treat
 probs
 ate <- estate(y,Z,prob=probs) # estimate the ATE
 ate
+
+# TODO: add in htestimate version.
 
 #################
 # TODO: Check that the Totals estimation is correct.
