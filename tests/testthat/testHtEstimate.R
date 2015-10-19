@@ -69,6 +69,8 @@ if (F) {
 
 ####################
 # Test 2. RI package example, but without blocking or clustering.
+context("RI package example simplified")
+
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 table(Z)
@@ -201,20 +203,25 @@ dim(cluster_perms)
 
 # Review the Pi_1i's by cluster - probability of being assigned treatment.
 # These should be 0.5 for the first 4 clusters then 0.333 for the last 6.
-apply(cluster_perms, MARGIN=1, FUN=function(x){mean(x == "treatment")})
+apply(cluster_perms, MARGIN=1, FUN=function(x){ mean(x == "treatment") })
 
 # Expand the cluster assignment to the unit level.
 assign_perms = apply(cluster_perms, MARGIN=2, FUN=function(assignment) {
+  # Create a dataframe with the cluster ID and the cluster-level assignment.
   assign_df = data.frame(cluster=unique(data$cluster), assignment)
+  # Merge cluster assignment back to the unit-level data.
   unit_assignment = merge(data, assign_df, by="cluster")
+  # We convert to numeric rather than a factor to see if this can be fix the NAs in covariance bug.
+  # But it seems not to be helping right now.
   as.numeric(as.factor(unit_assignment$assignment))
 })
 # We should have a 16x90 matrix of assignment permutations at the unit level.
 dim(assign_perms)
 
 # Confirm that our treatment assignment probabilities remain 0.5 and then 1/3.
-apply(assign_perms, MARGIN=1, FUN=function(x){mean(x == "treatment")})
-apply(assign_perms, MARGIN=1, FUN=function(x){mean(x == 2)})
+apply(assign_perms, MARGIN=1, FUN=function(x){ mean(x == "treatment") })
+# We need to use this version once we have converted to numeric rather than string values.
+apply(assign_perms, MARGIN=1, FUN=function(x){ mean(x == 2) })
 
 # This should give us a 32x32 matrix of assignment probabilities.
 prob_matrix = createProbMatrix(assign_perms)
@@ -227,4 +234,19 @@ for (i in 1:ncol(assign_perms)) {
   # Calculate the HT estimate of the treatment effect.
   results[[i]] = htestimate(y, assignment, contrasts=c(-1, 1), prob_matrix)
 }
+
+# ERROR: we are getting NAs for the covariances - need to figure out why and fix this.
+
+# Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
+mean(sapply(results, FUN=function(x){x$estimate}))
+# Our SD of the estimate should give us the first SE row in table 2.
+sd(sapply(results, FUN=function(x){x$estimate}))
+# Close to 0.429 from table 2 but not exactly the same.
+
+# Calculate the expectation of the variance for table 2.
+mean(sapply(results, FUN=function(x){x$std_err})^2)
+# Should get 0.184 - close but not super close.
+
+# SE should be 0.037 - also close but not super close.
+sd(sapply(results, FUN=function(x){x$std_err})^2)
 
