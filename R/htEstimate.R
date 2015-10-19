@@ -264,8 +264,8 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # Loop over each assignment level.
   #cat("Loop over each assignment level.\n")
-  for (i in 1:k) {
-    assignment_level = assignment_levels[i]
+  for (level_i in 1:k) {
+    assignment_level = assignment_levels[level_i]
     # TODO: are these the right cells in the prob matrix? Doesn't it need to vary by the assignment level?
     # I think we need to use getRawMatrixEntries function here, based on the assignment level.
     #weights = prob_matrix[weight_rows[assignment == assignment_level], weight_rows[assignment == assignment_level]]
@@ -289,7 +289,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # outcome_totals[i] = outcome[assignment == assignment_level] / diag(weights)
     # Do it slower for debugging.
     # TODO: convert to dot product?
-    outcome_totals[i] = 0
+    outcome_totals[level_i] = 0
     for (diag_i in 1:n_obs) {
       # If there is only one observation with this level we need a simply syntax because weights is
       # a scalar value rather than a matrix, so diag() does not work properly.
@@ -298,7 +298,11 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
       } else {
         wgt = weights
       }
-      outcome_totals[i] = outcome_totals[i] + outcome[assignment == assignment_level][diag_i] / wgt
+      if (is.na(wgt)) {
+        cat("NA for wgt :( Diag_i=", diag_i, "Level_i=", level_i, "\n")
+
+      }
+      outcome_totals[level_i] = outcome_totals[level_i] + outcome[assignment == assignment_level][diag_i] / wgt
     }
     #cat("Outcome totals:\n")
     #print(outcome_totals[i])
@@ -495,7 +499,21 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   # TODO: confirm that this use of the contrast weights is correct.
   # The general formula is from https://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables
   # I think we don't need to multiply two because we are using both triangles of a symmetric matrix.
-  var = sum(variance_of_totals * contrasts^2 + sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
+  # na.rm=T because the diagonals are NA since they are already in the variance calculation.
+  #var = sum(variance_of_totals * contrasts^2, sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
+
+  # Alternatively could do it in a simpler formula if we combine the var & cov estimates.
+  cov_combined = covariances
+  for (var_i in 1:length(variance_of_totals)) {
+    cov_combined[var_i, var_i] = variance_of_totals[var_i]
+  }
+  # Should give us the same covariance results.
+  var = sum(contrasts %*% t(contrasts) * cov_combined)
+  if (var < 0) {
+    cat("Error: estimated variance is negative. Contrasts:", paste(contrasts, collapse=", "), "\n")
+    cat("Covariances:\n")
+    print(cov_combined)
+  }
 
   # Divide by n^2 if we're not calculating the VAR of totals.
   if (!totals) {
@@ -509,7 +527,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # Return the results.
   # We include the variances and covariances for debugging purposes only.
-  result = list(estimate=estimate, std_err=se, p_value=p_value, variances=variance_of_totals, covariances=covariances)
+  result = list(estimate=estimate, std_err=se, p_value=p_value, covariances=cov_combined)
   return(result)
 }
 
