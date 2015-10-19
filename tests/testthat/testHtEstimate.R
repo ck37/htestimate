@@ -236,23 +236,35 @@ results = list()
 for (perm_i in 1:ncol(assign_perms)) {
   assignment = assign_perms[, perm_i]
   # Calculate the HT estimate of the treatment effect.
-  results[[perm_i]] = htestimate(y, assignment, contrasts=contrasts, prob_matrix)
+  result = htestimate(y, assignment, contrasts=contrasts, prob_matrix)
+  if (is.nan(result$std_err)) {
+    cat("Error in permutation", perm_i, "\n")
+    cat("Assignment:")
+    print(assignment)
+    cat("Result:\n")
+    print(result)
+    cat("\n")
+  }
+  results[[perm_i]] = result
 }
 
 head(results)
 
 # ERROR: we are getting NaNs for some of the std errors, presumably because the variance is negative :/.
 
+
+## Replicating table 2.
+
 # Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
-mean(sapply(results, FUN=function(x){x$estimate}))
-# Our SD of the estimate should give us the first SE row in table 2.
-sd(sapply(results, FUN=function(x){x$estimate}))
-# Close to 0.429 from table 2 but not exactly the same.
+estimates = sapply(results, FUN=function(x){x$estimate})
+mean(estimates)
+# Standard error of delta from the paper (first SE row in table 2).
+sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
+# This does match the table's result.
 
-# Calculate the expectation of the variance for table 2.
-mean(sapply(results, FUN=function(x){x$std_err})^2)
-# Should get 0.184 - close but not super close.
-
-# SE should be 0.037 - also close but not super close.
-sd(sapply(results, FUN=function(x){x$std_err})^2)
-
+# This is the actual variance of the estimated ATE.
+sum((estimates - mean(estimates))^2)/length(estimates)
+errors = sapply(results, FUN=function(x){x$std_err})
+# This version gives us the expectation of the estimated variance.
+mean(errors^2, na.rm=T)
+sum((errors - mean(errors))^2)/length(errors)
