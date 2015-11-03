@@ -231,7 +231,7 @@ dim(prob_matrix)
 contrasts = c(-1, 1)
 outcome = y
 
-# Loop over each possible assignment permutation.
+# Loop over each possible assignment permutation and calculate a separate result.
 results = list()
 for (perm_i in 1:ncol(assign_perms)) {
   assignment = assign_perms[, perm_i]
@@ -250,13 +250,13 @@ for (perm_i in 1:ncol(assign_perms)) {
 
 head(results)
 
-# ERROR: we are getting NaNs for some of the std errors, presumably because the variance is negative :/.
+# ERROR: we are getting NaNs for some of the std errors, presumably because the covariance is negative :/.
 
 
 ## Replicating table 2.
 
 # Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
-estimates = sapply(results, FUN=function(x){x$estimate})
+estimates = sapply(results, FUN=function(x){ x$estimate })
 mean(estimates)
 # Standard error of delta from the paper (first SE row in table 2).
 sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
@@ -264,7 +264,8 @@ sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
 
 # This is the actual variance of the estimated ATE.
 sum((estimates - mean(estimates))^2)/length(estimates)
-errors = sapply(results, FUN=function(x){x$std_err})
+errors = sapply(results, FUN=function(x){ x$std_err })
 # This version gives us the expectation of the estimated variance.
+# TOFIX: we have to remove NAs right now, but this shouldn't be necessary.
 mean(errors^2, na.rm=T)
 sum((errors - mean(errors))^2)/length(errors)
