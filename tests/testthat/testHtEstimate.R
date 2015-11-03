@@ -256,7 +256,7 @@ head(results)
 ## Replicating table 2.
 
 # Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
-estimates = sapply(results, FUN=function(x){x$estimate})
+estimates = sapply(results, FUN=function(x){ x$estimate })
 mean(estimates)
 # Standard error of delta from the paper (first SE row in table 2).
 sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
