@@ -291,7 +291,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # TODO: convert to dot product?
     outcome_totals[level_i] = 0
     for (diag_i in 1:n_obs) {
-      # If there is only one observation with this level we need a simply syntax because weights is
+      # If there is only one observation with this level we need a simpler syntax because weights is
       # a scalar value rather than a matrix, so diag() does not work properly.
       if (n_obs > 1) {
         wgt = diag(weights)[diag_i]
@@ -414,10 +414,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         } else if (approx %in% c("constant effects", "sharp null")) {
           # TODO 10/13/15: confirm that we can use the sharp null here.
 
-          # Arornow diss, EQ 2.15 (p. 18) line 2
+          # Arronow diss, EQ 2.15 (p. 18) line 2
           joint_component = (pi_ak_al - pi_ak * pi_al) * potential_outcomes[obs_k, assign_a] / pi_ak * potential_outcomes[obs_l, assign_a] / pi_al
         }
-        # TODO: support no effect assumption.
 
         running_sum = running_sum + joint_component
       }
@@ -428,7 +427,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # CUE#34
     cov_running_sum = 0
     # TODO: save work by only computing one triangle, rather than both triangles of the symmetric matrix.
-    # TODO: right now this matrix is not symmetric, so there are remaining bugs.
+    # TODO: right now this matrix is not symmetric, so there are remaining bugs. (Or symmetry may be unnecessary.)
     for (assign_b in 1:k) {
       # Skip when we are at our own level.
       if (assign_a == assign_b) next
@@ -511,6 +510,8 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   var = sum(contrasts %*% t(contrasts) * cov_combined)
   if (var < 0) {
     cat("Error: estimated variance is negative. Contrasts:", paste(contrasts, collapse=", "), "\n")
+    cat("contrasts %*% t(constrasts): \n")
+    print(contrasts %*% t(contrasts))
     cat("Covariances:\n")
     print(cov_combined)
   }
