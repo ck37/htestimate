@@ -250,7 +250,17 @@ for (perm_i in 1:ncol(assign_perms)) {
 
 head(results)
 
-# ERROR: we are getting NaNs for some of the std errors, presumably because the covariance is negative :/.
+# ERROR: we are getting NaNs for some of the std errors, because the covariances are much larger than the variances.
+# So we may have an error in either the covariance or the variance term calculations, or perhaps the weight calculation?
+
+# See e.g. assignment = assign_perms[, 78]
+assignment = assign_perms[, 78]
+result = htestimate(y, assignment, contrasts=contrasts, prob_matrix)
+result
+
+# What if we use a different covariance approximation?
+result = htestimate(y, assignment, contrasts=contrasts, prob_matrix, approx="constant effects")
+result
 
 
 ## Replicating table 2.
@@ -265,6 +275,10 @@ sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
 # This is the actual variance of the estimated ATE.
 sum((estimates - mean(estimates))^2)/length(estimates)
 errors = sapply(results, FUN=function(x){ x$std_err })
+
+# This should be 0, but we are getting 9 NaNs due to negative terms in the covariance matrix.
+sum(is.na(errors))
+
 # This version gives us the expectation of the estimated variance.
 # TOFIX: we have to remove NAs right now, but this shouldn't be necessary.
 mean(errors^2, na.rm=T)
