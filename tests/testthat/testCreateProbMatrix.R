@@ -13,7 +13,7 @@ testmat1_n = length(arms1)
 testmat1_k = length(unique(arms1))
 
 # Check that the returned dimensions are correct.
-context("Dimensions")
+context("createProbMatrix - Dimensions")
 
 test_that("Matrix should have n * K rows", {
   result = createProbMatrix(testmat1)
@@ -27,16 +27,16 @@ test_that("Matrix should have n * K columns", {
 })
 
 
-context("Diagonal")
+context("createProbMatrix - Diagonal")
 # Check that the diagonal results are correct.
 
-# Diagonal elements should sum to 1.
+# Diagonal squares should sum to 1.
 
 # Diagonal results should be symmetric.
 
 # Diagonal results should vanish off-diagonal.
 
-context("Off-Diagonal")
+context("createProbMatrix - Off-Diagonal")
 # Check that the off-diagonal results are correct.
 
 # Each off-diagonal square should sum to 1 (I think).
@@ -45,10 +45,13 @@ context("Off-Diagonal")
 
 # Confirm that base matrix is symmetric.
 
-context("RI example 1")
+context("createProbMatrix - RI example 1")
 y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
-perms = genperms(z, maxiter=10000)
+# Hide warning messages from the genperms function.
+zz = capture.output({ perms = genperms(z, maxiter=10000) })
 # This should not give us any errors.
 prob_matrix = createProbMatrix(perms)
-prob_matrix
+#prob_matrix
+
+# TODO: what do we want to be checking here?
