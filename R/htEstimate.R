@@ -508,8 +508,8 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   }
   # Should give us the same covariance results.
   var = sum(contrasts %*% t(contrasts) * cov_combined)
-  if (var < 0) {
-    cat("Error: estimated variance is negative. Contrasts:", paste(contrasts, collapse=", "), "\n")
+  if (is.na(var) || var < 0) {
+    cat("Error: estimated variance is negative or NA:", var, ". Contrasts:", paste(contrasts, collapse=", "), "\n")
     cat("contrasts %*% t(constrasts): \n")
     print(contrasts %*% t(contrasts))
     cat("Covariances:\n")
