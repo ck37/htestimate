@@ -14,7 +14,7 @@ testmat1_n = length(arms1)
 testmat1_k = length(unique(arms1))
 
 # Check that a simple test case works.
-context("Simple test case")
+context("htestimate - Simple test case")
 
 # Here we set the internal arguments to createProbMatrix to ease in debugging.
 assignments = testmat1
@@ -69,7 +69,7 @@ if (F) {
 
 ####################
 # Test 2. RI package example, but without blocking or clustering.
-context("RI package example simplified")
+context("htestimate - RI package example simplified")
 
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
@@ -79,7 +79,8 @@ table(Z)
 #block
 
 # Generates 10,000 samples by default.
-perms = genperms(Z, maxiter=10000)
+# Capture warning message output from genperms.
+zz = capture.output({ perms = genperms(Z, maxiter=10000) })
 dim(perms)
 
 # Look at the first 10 random permutations
@@ -152,9 +153,11 @@ ri_ate = estate(y,Z,prob=probs_100k) # estimate the ATE
 ri_ate
 
 # Confirm equality within epsilon.
-abs(result$estimate - ri_ate) <= 0.0000000001
+# abs(result$estimate - ri_ate) <= 0.0000000001
 # Even more precise:
-abs(result$estimate - ri_ate) <= .Machine$double.eps*2
+test_that("htestimate - Ex2: replicate results from RI package (no clustering or blocking).", {
+  expect_lte(abs(result$estimate - ri_ate), .Machine$double.eps*2)
+})
 
 
 ####################
