@@ -6,10 +6,10 @@ This package is currently under active development so bug reports and feature re
 
 ## Install
 
-Install directly from github using devtools (install.packages("devtools") if you don't already have devtools):
+Install directly from github using devtools:
 ```{r}
-library(devtools)
-install_github("ck37/htestimate")
+install.packages("devtools")     # If not already installed.
+devtools::install_github("ck37/htestimate")
 library(htestimate)
 ```
 
