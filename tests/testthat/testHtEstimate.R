@@ -74,9 +74,8 @@ context("htestimate - RI package example simplified")
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 table(Z)
-#cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
-#block <- c(rep(1,4),rep(2,6),rep(3,8))
-#block
+
+# We skip the cluster and block data now because that will be used in a later test.
 
 # Generates 10,000 samples by default.
 # Capture warning message output from genperms.
@@ -84,13 +83,13 @@ zz = capture.output({ perms = genperms(Z, maxiter=10000) })
 dim(perms)
 
 # Look at the first 10 random permutations
-perms[,1:10]
+perms[, 1:10]
 # Look at the assignment probability for those first 10 permutations.
 colMeans(perms)[1:10]
 
-probs <- genprob(perms) # probability of treatment
+probs = genprob(perms) # probability of treatment
 probs
-ri_ate = estate(y,Z,prob=probs) # estimate the ATE
+ri_ate = estate(y, Z, prob=probs) # estimate the ATE
 ri_ate
 
 # Convert from 0/1 to 1/2 assignment indictators, for compatability.
@@ -100,11 +99,16 @@ perms_ck = perms + 1
 dim(perms_ck)
 # Double-check the first 10 permutations.
 perms_ck[, 1:10]
+
+# This version does not need assignment to be rescaled.
 prob_matrix = createProbMatrix(perms_ck)
-# This second version keeps the original 0/1 coding.
+
+# This second version keeps the original 0/1 coding and needs the assignment levels to be converted to 1/2.
 prob_matrix2 = createProbMatrix(perms)
+
 # We should get the same probabilities between the two.
 all.equal(prob_matrix, prob_matrix2)
+
 # Examine the 1x1 matrix in the upper left.
 prob_matrix[1:18, 1:18]
 
@@ -149,14 +153,12 @@ result
 # Retry with RI.
 probs_100k = genprob(perms_100k) # probability of treatment
 probs_100k
-ri_ate = estate(y,Z,prob=probs_100k) # estimate the ATE
+ri_ate = estate(y, Z, prob=probs_100k) # estimate the ATE
 ri_ate
 
-# Confirm equality within epsilon.
-# abs(result$estimate - ri_ate) <= 0.0000000001
-# Even more precise:
+# Confirm equality within twice epsilon.
 test_that("htestimate - Ex2: replicate results from RI package (no clustering or blocking).", {
-  expect_lte(abs(result$estimate - ri_ate), .Machine$double.eps*2)
+  expect_lte(abs(result$estimate - ri_ate), .Machine$double.eps * 2)
 })
 
 
@@ -165,7 +167,7 @@ test_that("htestimate - Ex2: replicate results from RI package (no clustering or
 y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
-block <- c(rep(1,4), rep(2,6), rep(3,8))
+block <- c(rep(1, 4), rep(2, 6), rep(3, 8))
 block
 probs <- genprobexact(Z, blockvar=block, clustvar=cluster) # probability of treatment
 probs
