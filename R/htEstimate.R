@@ -340,7 +340,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         } else {
           # Otherwise we need to calculate tau-hat and use it to impute the unobserved potential outcome.
           # TODO: if we assume no effect, tau-hat is zero here.
-          temp_outcome = outcome[unit_i] + (outcome_totals[assign_a] - outcome_totals[assignment[unit_i]])/n
+          # CK 12/15 - is dividing by n correct here, or should it be based on # of observed units at that assignment level?
+          # TODO: double-check this to make sure imputation is correct.
+          temp_outcome = outcome[unit_i] + (outcome_totals[assign_a] - outcome_totals[assignment[unit_i]]) / n
         }
         potential_outcomes[unit_i, assign_a] = temp_outcome
       }
@@ -358,16 +360,17 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # TODO: use level_a when the assignment levels are not 1:k
     # Actually - we have already renumbered the assignment levels so this is probably not needed.
     level_a = assignment_levels[assign_a]
-    running_sum = 0
+    var_running_sum = 0
     #cat("Assign_a:", assign_a, "Level_a:", level_a, "\n")
+
+    # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
+    cells = getRawMatrixEntries(assign_a, assign_a, n)
 
     # Loop over each observation.
     for (obs_k in 1:n) {
       #cat("Assignment level:", level_a, "Observation:", obs_k)
       # Pi_ai is the non-joint assignment probability of this unit to this assignment level/arm.
-      # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
       # TODO: should we be using level_a here?
-      cells = getRawMatrixEntries(assign_a, assign_a, n)
       #cat("Cells:\n")
       #print(cells)
       pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
@@ -376,20 +379,23 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
       # T'k(1 - pi_1k)*(Y_k/Pi_1k)^2
       # TODO: Does this need to check if pi_indiv == 0?? Doesn't seem to in the formula.
       if (approx == "youngs") {
-        first_component = (assignment[obs_k] == assign_a) * (1 - pi_ak)*(outcome[k]/pi_ak)^2
+        first_component = (assignment[obs_k] == assign_a) * (1 - pi_ak) * (outcome[obs_k] / pi_ak)^2
       } else if (approx %in% c("constant effects", "sharp null")) {
         # TODO 10/13/15: confirm that we can use sharp null here.
         # Aronow dissertation, Eq 2.15 (p. 18); line 1.
-        first_component = pi_ak * (1 - pi_ak) * (potential_outcomes[k] / pi_ak)^2
+        first_component = pi_ak * (1 - pi_ak) * (potential_outcomes[obs_k, assign_a] / pi_ak)^2
       }
 
       #individual_component = pi_individual * (1 - pi_individual) * (outcome[i]/pi_individual)^2
-      running_sum = running_sum + first_component
+      var_running_sum = var_running_sum + first_component
 
       # Youngs: Second and third components of equation 32.
       for (obs_l in 1:n) {
         # Skip this iteration if i == j
         if (obs_k == obs_l) next
+
+        # Set joint component to NA as a safety feature - if it's not set it will be noticable.
+        joint_component = NA
 
         # TODO: confirm if we should use j or assign_i here.
         #cells = getRawMatrixEntries(assign_i, assign_i, n)
@@ -402,14 +408,14 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           if (pi_ak_al > 0) {
             # Option 1: pi_ij > 0
             # Second component of equation 32.
-            joint_component = (assignment[obs_k] == assign_a)*(assignment[obs_l] == assign_a) / pi_ak_al *
+            joint_component = (assignment[obs_k] == assign_a) * (assignment[obs_l] == assign_a) / pi_ak_al *
               (pi_ak_al - pi_ak * pi_al) * outcome[obs_k] / pi_ak * outcome[obs_l] / pi_al
           } else {
             # Option 2: pi_ij = 0
             # Third component of equation 32.
             # This is young's equality right now.
-              joint_component = (assignment[obs_k] == assign_a) * outcome[obs_k]^2/(2*pi_ak)
-                + (assignment[obs_l] == assign_a) * outcome[obs_l]^2/(2*pi_al)
+              joint_component = (assignment[obs_k] == assign_a) * outcome[obs_k]^2 / (2 * pi_ak)
+                + (assignment[obs_l] == assign_a) * outcome[obs_l]^2 / (2 * pi_al)
           }
         } else if (approx %in% c("constant effects", "sharp null")) {
           # TODO 10/13/15: confirm that we can use the sharp null here.
@@ -418,29 +424,42 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           joint_component = (pi_ak_al - pi_ak * pi_al) * potential_outcomes[obs_k, assign_a] / pi_ak * potential_outcomes[obs_l, assign_a] / pi_al
         }
 
-        running_sum = running_sum + joint_component
+        var_running_sum = var_running_sum + joint_component
       }
     }
-    variance_of_totals[assign_a] = running_sum
+    variance_of_totals[assign_a] = var_running_sum
+    # Let's put the result directly into the covariance matrix so that we don't have to copy it later.
+    # CK 12/15 - disabled for now because our old_cov calculation assumes the diagonals are NA.
+    # covariances[assign_a, assign_a] = var_running_sum
 
     # Create the covariances for this assignment level.
     # CUE#34
-    cov_running_sum = 0
     # TODO: save work by only computing one triangle, rather than both triangles of the symmetric matrix.
     # TODO: right now this matrix is not symmetric, so there are remaining bugs. (Or symmetry may be unnecessary.)
     for (assign_b in 1:k) {
+
       # Skip when we are at our own level.
       if (assign_a == assign_b) next
 
+      # Reset the running sum for each level we're comparing to assign_a.
+      cov_running_sum = 0
+
+      # CK 12/15 - do we need this here? seems that we aren't using it.
       level_b = assignment_levels[assign_b]
+
       # Create a backup of the cells found in the previous loop, before we overwrite them.
+      # CK 12/15 - note, we don't seem to be using this right now. TBD if we should be.
       cells_i = cells
+
+      # CUE #34
       for (obs_k in 1:n) {
 
         # TODO: I think this part may be wrong, need to double-check. Should it be assign_i, assign_j?
         cells = getRawMatrixEntries(assign_a, assign_a, n)
         pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
+
         for (obs_l in 1:n) {
+
           # Skip the same observation.
           if (obs_k == obs_l) next
 
@@ -472,12 +491,14 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
             # Aronow diss Eq. 2.15 (p. 18) line 5 (effectively also includes line 6).
             # TODO: do we need to handle a potential zero for pi_ak_bl due to clustering here? E.g. replace with a 1?
-            first_component = (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / pi_ak_bl
+            first_component = (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / (pi_ak * pi_bl)
             cov_running_sum = cov_running_sum + first_component
           }
         }
 
         if (approx == "youngs") {
+          # CK 12/15 this part may have an error in it, but it seems ok after double-checking.
+
           # Eq#34 second component:
           cov_running_sum = cov_running_sum - (assign_a == assignment[obs_k]) * outcome[obs_k]^2 / (2 * pi_ak)
 
@@ -509,14 +530,6 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   # Should give us the same covariance results in a simpler formula.
   var = sum(contrasts %*% t(contrasts) * cov_combined)
 
-  # Double-check that we get the same results, for debugging purposes.
-  if (abs(old_var - var) > .Machine$double.eps*1000) {
-    cat("Warning: new formula for variance doesn't match the result from the old variance formula\n")
-    cat("Old var:\n")
-    print(old_var)
-    cat("New var:\n")
-    print(var)
-  }
 
   if (is.na(var) || var < 0) {
     cat("Error: estimated variance is negative or NA:", var, ". Contrasts:", paste(contrasts, collapse=", "), "\n")
@@ -524,6 +537,17 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     print(contrasts %*% t(contrasts))
     cat("Covariances:\n")
     print(cov_combined)
+  } else {
+    # Only do this step if we have a non-NA and positive variance.
+
+    # Double-check that we get the same results, for debugging purposes.
+    if (abs(old_var - var) > .Machine$double.eps*1000) {
+      cat("Warning: new formula for variance doesn't match the result from the old variance formula\n")
+      cat("Old var:\n")
+      print(old_var)
+      cat("New var:\n")
+      print(var)
+    }
   }
 
   # Divide by n^2 if we're not calculating the VAR of totals.
