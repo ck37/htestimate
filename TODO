@@ -1,5 +1,8 @@
 TODO
 
+Bugs
+- PRIORITY: Fix bug in covariance calculation for htestimate.
+
 Functionality
 - IN PROGRESS: Add support for constant treatment effects and sharp null approximations.
 - IN PROGRESS: Support clustering.
