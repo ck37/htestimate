@@ -587,5 +587,48 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   return(result)
 }
 
+# Example from Class of Unbiased Estimators, Table 1, p. 147 - blocking and clustering.
+# This function generates the assignment permutations for use in htestimate.
+# This is a function so that we can re-use the cost in testing htestimate() and createProbMatrix().
+test_example_cue_table1 = function() {
+  y = c(1,1,1,1,1,0,1,1,0,1,1,1,1,0,0,0)
+  cluster = c(1,1,2,2,3,4,5,5,5,6,6,7,7,8,9,10)
+  block = c(rep(1, 6), rep(2, 10))
+  x = c(4,0,4,1,4,2,4,1,2,5,4,1,4,2,2,3)
+
+  #data = data.frame(cbind(block, cluster, x, y))
+  data = data.frame(block, cluster, x, y)
+
+  # Collapse to the cluster level before performing randomization.
+  library(dplyr)
+  data_clusters = distinct(data, cluster) %>% select(block, cluster)
+  data_clusters
+
+  # Generate many possible blocked random assignments; each is a column.
+  library(randomizr)
+  set.seed(1)
+  # Assign 2 units to treatment per block (50% chance in 1st block, 33% chance in 2nd block)
+  block_m = rbind(c(2, 2),
+                  c(4, 2))
+  reps = replicate(900, block_ra(data_clusters$block, block_m = block_m, condition_names = c("control", "treatment")))
+  # Set margin=2 so that matrix is unique by column (assignment permutation) rather than row.
+  cluster_perms = unique(reps, MARGIN=2)
+
+  # Expand the cluster assignment to the unit level.
+  assign_perms = apply(cluster_perms, MARGIN=2, FUN=function(assignment) {
+    # Create a dataframe with the cluster ID and the cluster-level assignment.
+    assign_df = data.frame(cluster=unique(data$cluster), assignment)
+    # Merge cluster assignment back to the unit-level data.
+    unit_assignment = merge(data, assign_df, by="cluster")
+    # We convert to numeric rather than a factor to see if this can be fix the NAs in covariance bug.
+    # But it seems not to be helping right now.
+    as.numeric(as.factor(unit_assignment$assignment))
+  })
+
+  results = list(cluster_perms=cluster_perms, assign_perms=assign_perms, y=y)
+  return(results)
+}
+
+
 # New function to randomly permute assignments within blocks, after aggregating to cluster totals.
 # Or do randomizr, blockTools, or ri (et al?) already provide this functionality?
