@@ -13,6 +13,8 @@
 
 Class of Unbiased Estimators.
 
+Equation \#32 generalized to greater than 2 RCT arms, where a is one arm, b is another other arm, and A is the assignment of a unit.
+
 Equation \#34 generalized to greater than 2 RCT arms, where a is one arm, b is another other arm, and A is the assignment of a unit.
 
 \begin{align*}
