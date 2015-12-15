@@ -1,0 +1,5 @@
+.DS_Store
+*.tex
+*.gz
+htestimate-notes.log
+htestimate-notes.pdf
