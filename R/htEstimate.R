@@ -199,7 +199,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # Create a combined dataframe for use with dplyr.
     combined_df = data.frame(outcome, raw_assignment, cluster_id)
 
-    # Aggregate the data by cluster id.
+    # Aggregate the data by cluster id. NOTE: could use aggregate() function potentially?
     agg_df = dplyr::group_by(combined_df, cluster_id)
 
     # Confirm that all assignments are equal within each cluster, otherwise give an error.
@@ -255,6 +255,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # Determine the location of the weights in the probability matrix.
   # We just need to identify the row because the column will be the same.
+  # CK 12/15: NOTE, we seem to not be using this part anymore. Delete?
   weight_rows = c()
   for (i in 1:n) {
     weight_rows[i] = 1 + (i - 1) * n + (assignment[i] - 1)
@@ -269,12 +270,19 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # TODO: are these the right cells in the prob matrix? Doesn't it need to vary by the assignment level?
     # I think we need to use getRawMatrixEntries function here, based on the assignment level.
     #weights = prob_matrix[weight_rows[assignment == assignment_level], weight_rows[assignment == assignment_level]]
-    cells = getRawMatrixEntries(assignment_level, assignment_level, n)
+    # CK 12/15 I think we should be using level_i instead of the raw assignment level, which may not be 1..k.
+    # cells = getRawMatrixEntries(assignment_level, assignment_level, n)
+    cells = getRawMatrixEntries(level_i, level_i, n)
     #cat("i", i, "assignment_level", assignment_level, "Cells:", "\n")
     #print(cells)
-    weights = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][assignment == assignment_level, assignment == assignment_level]
+    # CK 12/15 again, use the level_i variable instead.
+    #weights = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][assignment == assignment_level, assignment == assignment_level]
+    weights = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][assignment == level_i, assignment == level_i]
     # Number of observations with this assignment level
-    n_obs = length(outcome[assignment == assignment_level])
+    # CK 12/15 again, use level_i assignment variable.
+    #n_obs = length(outcome[assignment == assignment_level])
+    n_obs = length(outcome[assignment == level_i])
+    # cat("Obs in level", level_i, ":", sqrt(length(weights)), "or", n_obs, "\n")
     #cat("Weights:\n")
     #print(weights)
     #cat("Dim weights:\n")
@@ -293,6 +301,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     for (diag_i in 1:n_obs) {
       # If there is only one observation with this level we need a simpler syntax because weights is
       # a scalar value rather than a matrix, so diag() does not work properly.
+      # CK 12/15: we could just do as.matrix though.
       if (n_obs > 1) {
         wgt = diag(weights)[diag_i]
       } else {
@@ -302,7 +311,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         cat("NA for wgt :( Diag_i=", diag_i, "Level_i=", level_i, "\n")
 
       }
-      outcome_totals[level_i] = outcome_totals[level_i] + outcome[assignment == assignment_level][diag_i] / wgt
+      # CK 12/15: again, use level_i
+      # outcome_totals[level_i] = outcome_totals[level_i] + outcome[assignment == assignment_level][diag_i] / wgt
+      outcome_totals[level_i] = outcome_totals[level_i] + outcome[assignment == level_i][diag_i] / wgt
     }
     #cat("Outcome totals:\n")
     #print(outcome_totals[i])
@@ -351,8 +362,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   }
 
 
-  # Loop over each assignment level and calculate the variance of the total.
-  # Actually, this is equation CUEATE#32.
+  # CUEATE#32: Loop over each assignment level and calculate the variance of the total.
   # TODO: generalize EQ#32 to multiple treatment arms for reference.
   variance_of_totals = rep(NA, k)
   covariances = matrix(nrow=k, ncol=k)
@@ -360,6 +370,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     # TODO: use level_a when the assignment levels are not 1:k
     # Actually - we have already renumbered the assignment levels so this is probably not needed.
     level_a = assignment_levels[assign_a]
+
     var_running_sum = 0
     #cat("Assign_a:", assign_a, "Level_a:", level_a, "\n")
 
@@ -373,6 +384,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
       # TODO: should we be using level_a here?
       #cat("Cells:\n")
       #print(cells)
+      # Initialize to NA for debugging purposes - will help to track down any logic errors.
+      first_component = NA
+
       pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
 
       # Equation: UEATE#32, first component.
@@ -386,12 +400,15 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         first_component = pi_ak * (1 - pi_ak) * (potential_outcomes[obs_k, assign_a] / pi_ak)^2
       }
 
+      # Stop here if first_component is still NA, so we can figure out what went wrong.
+      stopifnot(!is.na(first_component))
+
       #individual_component = pi_individual * (1 - pi_individual) * (outcome[i]/pi_individual)^2
       var_running_sum = var_running_sum + first_component
 
       # Youngs: Second and third components of equation 32.
       for (obs_l in 1:n) {
-        # Skip this iteration if i == j
+        # Skip this iteration if k == l
         if (obs_k == obs_l) next
 
         # Set joint component to NA as a safety feature - if it's not set it will be noticable.
@@ -404,6 +421,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         # TODO: confirm if we should use j or assign_i here.
         #cells = getRawMatrixEntries(assign_i, assign_i, n)
         pi_ak_al = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_l]
+
         if (approx == "youngs") {
           if (pi_ak_al > 0) {
             # Option 1: pi_ij > 0
@@ -423,6 +441,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           # Arronow diss, EQ 2.15 (p. 18) line 2
           joint_component = (pi_ak_al - pi_ak * pi_al) * potential_outcomes[obs_k, assign_a] / pi_ak * potential_outcomes[obs_l, assign_a] / pi_al
         }
+
+        # Stop here if joint_component is still NA, so we can figure out what went wrong.
+        stopifnot(!is.na(joint_component))
 
         var_running_sum = var_running_sum + joint_component
       }
@@ -561,8 +582,8 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.
-  # We include the variances and covariances for debugging purposes only.
-  result = list(estimate=estimate, std_err=se, p_value=p_value, covariances=cov_combined)
+  # We include the variances, covariances, and outcome totals for debugging purposes only.
+  result = list(estimate=estimate, std_err=se, p_value=p_value, covariances=cov_combined, totals=outcome_totals)
   return(result)
 }
 
