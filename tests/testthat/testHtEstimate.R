@@ -251,7 +251,7 @@ for (perm_i in 1:ncol(assign_perms)) {
   results[[perm_i]] = result
 }
 
-head(results)
+#head(results)
 
 # ERROR: we are getting NaNs for some of the std errors, because the covariances are much larger than the variances.
 # So we may have an error in either the covariance or the variance term calculations, or perhaps the weight calculation?
