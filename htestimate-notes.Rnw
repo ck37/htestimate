@@ -1,0 +1,28 @@
+\documentclass[12pt]{article}
+
+\usepackage{graphicx} % Needed for \resizebox
+\usepackage{ulem} % strike-throughs.
+\usepackage{amsmath, amsthm, amssymb} % alignment of formulas, etc.
+\usepackage{fullpage} % smaller page margin.
+\usepackage{multirow} % allow multirow/multicolumn tables.
+\usepackage{tabu} % customize width of tables, etc.
+\usepackage{hyperref} % Link URLs.
+
+
+\begin{document}
+
+Class of Unbiased Estimators.
+
+Equation \#34 generalized to greater than 2 RCT arms, where a is one arm, b is another other arm, and A is the assignment of a unit.
+
+\begin{align*}
+\displaystyle
+\widehat{Cov}_C(\widehat{Y^T_a}, \widehat{Y^T_b}) &=
+\sum_{k=1}^M \sum_{l \ne k} \frac{1(A'_k = a) 1(A'_l = b)}{\pi'_{ak, bl}}
+(\pi'_{ak, bl} - \pi'_{ak} \pi'_{bl}) \\
+& - \sum_{k=1}^M 1(A'_k = a) \frac{(Y'_k)^2}{2 \pi'_{ak}}
+- \sum_{k=1}^M 1(A'_k = b) \frac{(Y'_k)^2}{2 \pi'_{bk}}
+\end{align*}
+
+
+\end{document}

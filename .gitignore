@@ -3,3 +3,7 @@
 .RData
 .DS_Store
 htEstimate.Rproj
+*.tex
+*.gz
+htestimate-notes.log
+htestimate-notes.pdf

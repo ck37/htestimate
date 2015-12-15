@@ -499,15 +499,25 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   # The general formula is from https://en.wikipedia.org/wiki/Variance#Weighted_sum_of_variables
   # I think we don't need to multiply two because we are using both triangles of a symmetric matrix.
   # na.rm=T because the diagonals are NA since they are already in the variance calculation.
-  #var = sum(variance_of_totals * contrasts^2, sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
+  old_var = sum(variance_of_totals * contrasts^2, sum(contrasts %*% t(contrasts) * covariances, na.rm=T))
 
-  # Alternatively could do it in a simpler formula if we combine the var & cov estimates.
+  # Merge the var estimates into the diagonals of the covariance matrix.
   cov_combined = covariances
   for (var_i in 1:length(variance_of_totals)) {
     cov_combined[var_i, var_i] = variance_of_totals[var_i]
   }
-  # Should give us the same covariance results.
+  # Should give us the same covariance results in a simpler formula.
   var = sum(contrasts %*% t(contrasts) * cov_combined)
+
+  # Double-check that we get the same results, for debugging purposes.
+  if (abs(old_var - var) > .Machine$double.eps*1000) {
+    cat("Warning: new formula for variance doesn't match the result from the old variance formula\n")
+    cat("Old var:\n")
+    print(old_var)
+    cat("New var:\n")
+    print(var)
+  }
+
   if (is.na(var) || var < 0) {
     cat("Error: estimated variance is negative or NA:", var, ". Contrasts:", paste(contrasts, collapse=", "), "\n")
     cat("contrasts %*% t(constrasts): \n")
