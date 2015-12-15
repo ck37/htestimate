@@ -100,8 +100,19 @@ prob_matrix = createProbMatrix(ex$assign_perms)
 dim(prob_matrix)
 
 # Confirm that there are no negative entries.
-test_that("Matrix should have no negative entries", {
+test_that("Probability matrix should have no negative entries", {
   expect_equal(sum(apply(prob_matrix, MARGIN=2, FUN=function(col) { sum(col < 0) } )), 0)
+})
+
+# These are the expected probabilities of being assigned to treatment (Table 1, last column).
+pi_1i = c(rep(0.5, 6), rep(1/3, 10))
+
+test_that("Estimated probabilities of treatment assignment are correct.", {
+  expect_true(all.equal(diag(prob_matrix)[17:32], pi_1i))
+})
+
+test_that("Estimated probabilities of control assignment are correct.", {
+  expect_true(all.equal(diag(prob_matrix)[1:16], 1 - pi_1i))
 })
 
 # Clean up test.
