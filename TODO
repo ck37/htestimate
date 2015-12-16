@@ -5,8 +5,8 @@ Bugs
 
 Functionality
 - IN PROGRESS: Add support for constant treatment effects and sharp null approximations.
-- IN PROGRESS: Support clustering.
 - PRIORITY: Hajek ratio estimator.
+- IN PROGRESS: Support clustering.
 - Other extensions listed in the PDF: covariate adjustment, LATE, etc.
 - TODO: see if assignment levels can be character strings.
 - Pretty print of the estimation result.
@@ -21,6 +21,8 @@ Testing
 - IN PROGRESS: Test an htEstimate based on a re-randomized probMatrix (ri package or otherwise)
 - Test a probability matrix based on re-randomization (ri package or otherwise)
 - Compare HT results to those of additional packages (samplingVarEst, SamplingBook)
+- Confirm that totals are correct.
+- Create tests based on simple simulated data.
 - Add more test cases.
 
 Performance

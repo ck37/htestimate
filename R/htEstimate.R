@@ -66,7 +66,7 @@ createProbMatrix = function(assignments, byrow = F) {
     # TODO: add a test case to confirm that this check works.
   }
 
-  # Matrix to store the results. Initialize all cells to -1 so that we can see errors for easily.
+  # Matrix to store the results. Initialize all cells to NA so that we can see errors for easily.
   result = matrix(nrow = n*k, ncol=n*k)
   #cat("Result dimensions:", n*k, "by", n*k, "\n")
 
