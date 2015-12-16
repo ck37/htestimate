@@ -71,8 +71,8 @@ if (F) {
 # Test 2. RI package example, but without blocking or clustering.
 context("htestimate - RI package example simplified")
 
-y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
-Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 table(Z)
 
 # We skip the cluster and block data now because that will be used in a later test.
@@ -121,9 +121,15 @@ table(assignment)
 # This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
 result = htestimate(y, z_ck, contrasts = contrasts, prob_matrix = prob_matrix)
 result
+# Check for symmetry in the covariance matrix.
+isSymmetric(result$covariances)
+
 # This version keeps the original 0, 1 assignment levels.
 result2 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2)
 result2
+
+# Check for symmetry in the covariance matrix.
+isSymmetric(result2$covariances)
 
 # These should be true.
 unlist(result) == unlist(result2)
@@ -134,10 +140,16 @@ approx = "constant effects"
 result3 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
 result3
 
+# Check for symmetry in the covariance matrix.
+isSymmetric(result3$covariances)
+
 # Sharp null test.
 approx = "sharp null"
 result4 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2, approx = approx)
 result4
+
+# Check for symmetry in the covariance matrix.
+isSymmetric(result4$covariances)
 
 # We are getting slightly different estimate results, but this is due to the # of permutations being small.
 result$estimate == ri_ate
@@ -149,6 +161,8 @@ choose(18, 10)
 prob_matrix_100k = createProbMatrix(perms_100k)
 result = htestimate(y, z_ck, contrasts = c(-1, 1), prob_matrix = prob_matrix_100k)
 result
+# Check for symmetry in the covariance matrix.
+isSymmetric(result$covariances)
 
 # Retry with RI.
 probs_100k = genprob(perms_100k) # probability of treatment
@@ -218,10 +232,14 @@ for (perm_i in 1:ncol(ex$assign_perms)) {
 assignment = ex$assign_perms[, 78]
 result = htestimate(ex$y, assignment, contrasts=contrasts, prob_matrix)
 result
+# Check for symmetry in the covariance matrix.
+isSymmetric(result$covariances)
 
 # What if we use a different covariance approximation?
 result = htestimate(ex$y, assignment, contrasts=contrasts, prob_matrix, approx="constant effects")
 result
+# Check for symmetry in the covariance matrix.
+isSymmetric(result$covariances)
 
 
 ## Replicating table 2.
@@ -244,3 +262,5 @@ sum(is.na(errors))
 # TOFIX: we have to remove NAs right now, but this shouldn't be necessary.
 mean(errors^2, na.rm=T)
 sum((errors - mean(errors))^2)/length(errors)
+
+# TODO: clean up test.

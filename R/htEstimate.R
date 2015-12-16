@@ -67,7 +67,7 @@ createProbMatrix = function(assignments, byrow = F) {
   }
 
   # Matrix to store the results. Initialize all cells to -1 so that we can see errors for easily.
-  result = matrix(data=-1, nrow = n*k, ncol=n*k)
+  result = matrix(nrow = n*k, ncol=n*k)
   #cat("Result dimensions:", n*k, "by", n*k, "\n")
 
   # Create the diagonals and lower triangle.
@@ -367,14 +367,13 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   variance_of_totals = rep(NA, k)
   covariances = matrix(nrow=k, ncol=k)
   for (assign_a in 1:k) {
-    # TODO: use level_a when the assignment levels are not 1:k
-    # Actually - we have already renumbered the assignment levels so this is probably not needed.
-    level_a = assignment_levels[assign_a]
 
+    # Reset the variance running sum for each level.
     var_running_sum = 0
+
     #cat("Assign_a:", assign_a, "Level_a:", level_a, "\n")
 
-    # TODO: confirm that we should be using assign_i for the cells line, rather than just i.
+    # We use the same cells for every observation so define this outside of the unit loops.
     cells = getRawMatrixEntries(assign_a, assign_a, n)
 
     # Loop over each observation.
@@ -448,34 +447,30 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
         var_running_sum = var_running_sum + joint_component
       }
     }
+
     variance_of_totals[assign_a] = var_running_sum
-    # Let's put the result directly into the covariance matrix so that we don't have to copy it later.
+
+    # Could put the result directly into the covariance matrix so that we don't have to copy it later.
     # CK 12/15 - disabled for now because our old_cov calculation assumes the diagonals are NA.
     # covariances[assign_a, assign_a] = var_running_sum
 
     # Create the covariances for this assignment level.
     # CUE#34
     # TODO: save work by only computing one triangle, rather than both triangles of the symmetric matrix.
-    # TODO: right now this matrix is not symmetric, so there are remaining bugs. (Or symmetry may be unnecessary.)
     for (assign_b in 1:k) {
 
       # Skip when we are at our own level.
       if (assign_a == assign_b) next
 
+      # Confirm that we are processing two different levels.
+      stopifnot(assign_a != assign_b)
+
       # Reset the running sum for each level we're comparing to assign_a.
       cov_running_sum = 0
-
-      # CK 12/15 - do we need this here? seems that we aren't using it.
-      level_b = assignment_levels[assign_b]
-
-      # Create a backup of the cells found in the previous loop, before we overwrite them.
-      # CK 12/15 - note, we don't seem to be using this right now. TBD if we should be.
-      cells_i = cells
 
       # CUE #34
       for (obs_k in 1:n) {
 
-        # TODO: I think this part may be wrong, need to double-check. Should it be assign_i, assign_j?
         cells = getRawMatrixEntries(assign_a, assign_a, n)
         pi_ak = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_k]
 
@@ -484,7 +479,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           # Skip the same observation.
           if (obs_k == obs_l) next
 
-          # TODO: Should the cells indices be assign_i & assign_j? or i & j?
+          # Set to NA for safety.
+          first_component = NA
+
           cells = getRawMatrixEntries(assign_a, assign_b, n)
           pi_ak_bl = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_k, obs_l]
 
@@ -492,8 +489,6 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
           pi_bl = prob_matrix[cells$start_row:cells$end_row, cells$start_col:cells$end_col][obs_l, obs_l]
 
           if (approx == "youngs") {
-            # TODO: need to review this equation, not sure if it's right.
-            # Esp. the assignment[j] == assign_j part.
             # Equation #34 HERE (youngs inequality):
 
             # Per CUE, p. 147 if the probability is 0 then we set Pi_hat to 1 to avoid dividing by zero.
@@ -506,15 +501,17 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
               cat("Generated NaN in cov calculation. assign_a=", assign_a, "assign_b=", assign_b, "obs_k=", obs_k
                   , "obs_l=", obs_l, "Pi_ak=", pi_ak, "Pi_bl=", pi_bl, "Pi_ak_bl=", pi_ak_bl,"\n")
             }
-            cov_running_sum = cov_running_sum + first_component
           } else if (approx %in% c("constant effects", "sharp null")) {
             # TODO 10/13/15: confirm that we can use the sharp null here.
 
             # Aronow diss Eq. 2.15 (p. 18) line 5 (effectively also includes line 6).
-            # TODO: do we need to handle a potential zero for pi_ak_bl due to clustering here? E.g. replace with a 1?
             first_component = (pi_ak_bl - pi_ak * pi_bl) * potential_outcomes[obs_k, assign_a] * potential_outcomes[obs_l, assign_b] / (pi_ak * pi_bl)
-            cov_running_sum = cov_running_sum + first_component
           }
+
+          # Confirm that we generated a new value for first_component.
+          stopifnot(!is.na(first_component))
+
+          cov_running_sum = cov_running_sum + first_component
         }
 
         if (approx == "youngs") {
@@ -610,6 +607,8 @@ test_example_cue_table1 = function() {
   # Assign 2 units to treatment per block (50% chance in 1st block, 33% chance in 2nd block)
   block_m = rbind(c(2, 2),
                   c(4, 2))
+
+  # We choose 900 replications because it's 10 times the total unique we expect to get (90).
   reps = replicate(900, block_ra(data_clusters$block, block_m = block_m, condition_names = c("control", "treatment")))
   # Set margin=2 so that matrix is unique by column (assignment permutation) rather than row.
   cluster_perms = unique(reps, MARGIN=2)
@@ -625,7 +624,7 @@ test_example_cue_table1 = function() {
     as.numeric(as.factor(unit_assignment$assignment))
   })
 
-  results = list(cluster_perms=cluster_perms, assign_perms=assign_perms, y=y)
+  results = list(cluster_perms=cluster_perms, assign_perms=assign_perms, y=y, data=data)
   return(results)
 }
 
