@@ -2,6 +2,9 @@ library(crank) # We use the permute() function.
 library(testthat)
 library(ri)
 
+# Re-load htestimate.R in case we haven't already run it.
+source("R/htestimate.R")
+
 ####################
 # Test 1. Create test matrix 1 per the PDF document.
 arms1 = 1:3
@@ -178,17 +181,35 @@ test_that("htestimate - Ex2: replicate results from RI package (no clustering or
 
 ####################
 # Test 3. Compare to the RI package example, this time with clustering and blocking:
-y <- c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
-Z <- c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
-cluster <- c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
-block <- c(rep(1, 4), rep(2, 6), rep(3, 8))
+y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
+Z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
+cluster = c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
+block = c(rep(1, 4), rep(2, 6), rep(3, 8))
 block
-probs <- genprobexact(Z, blockvar=block, clustvar=cluster) # probability of treatment
+probs = genprobexact(Z, blockvar=block, clustvar=cluster) # probability of treatment
 probs
-ate <- estate(y, Z, prob=probs) # estimate the ATE
+ate = estate(y, Z, prob=probs) # estimate the ATE
 ate
 
-# TODO: add in htestimate version, maybe with new randomizer block_and_cluster function?
+perms = genperms(Z, blockvar=block, clustvar=cluster)
+dim(perms)
+
+# Generate potential outcomes under tau = ate_hat
+Ys = genouts(y, Z, ate=ate)
+distout = gendist(Ys, perms, prob=probs)
+dispdist(distout, ate)
+
+#####
+# sharp null hypothesis.
+Ys = genouts(y, Z, ate=0)
+distout = gendist(Ys, perms, prob=probs)
+dispdist(distout, ate)
+
+### Compare to htestimate results.
+prob_matrix = createProbMatrix(perms)
+htestimate(y, Z, contrasts = c(-1, 1), prob_matrix)
+htestimate(y, Z, contrasts = c(-1, 1), prob_matrix, approx = "constant effects")
+htestimate(y, Z, contrasts = c(-1, 1), prob_matrix, approx = "sharp null")
 
 #################
 # TODO: Check that the Totals estimation is correct.
