@@ -232,7 +232,7 @@ results = list()
 for (perm_i in 1:ncol(ex$assign_perms)) {
   assignment = ex$assign_perms[, perm_i]
   # Calculate the HT estimate of the treatment effect.
-  result = htestimate(ex$y, assignment, contrasts=contrasts, prob_matrix)
+  result = htestimate(ex$data$y, assignment, contrasts=contrasts, prob_matrix)
   if (is.nan(result$std_err)) {
     cat("Error in permutation", perm_i, "\n")
     cat("Assignment:")
@@ -251,13 +251,13 @@ for (perm_i in 1:ncol(ex$assign_perms)) {
 
 # See e.g. assignment = assign_perms[, 78]
 assignment = ex$assign_perms[, 78]
-result = htestimate(ex$y, assignment, contrasts=contrasts, prob_matrix)
+result = htestimate(ex$data$y, assignment, contrasts=contrasts, prob_matrix)
 result
 # Check for symmetry in the covariance matrix.
 isSymmetric(result$covariances)
 
 # What if we use a different covariance approximation?
-result = htestimate(ex$y, assignment, contrasts=contrasts, prob_matrix, approx="constant effects")
+result = htestimate(ex$data$y, assignment, contrasts=contrasts, prob_matrix, approx="constant effects")
 result
 # Check for symmetry in the covariance matrix.
 isSymmetric(result$covariances)
