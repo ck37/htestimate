@@ -548,7 +548,6 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   # Should give us the same covariance results in a simpler formula.
   var = sum(contrasts %*% t(contrasts) * cov_combined)
 
-
   if (is.na(var) || var < 0) {
     cat("Error: estimated variance is negative or NA:", var, ". Contrasts:", paste(contrasts, collapse=", "), "\n")
     cat("contrasts %*% t(constrasts): \n")
@@ -572,10 +571,12 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
   if (!totals) {
      var = var / n^2
   }
+
+  # This will give a NaN if the estimated variance is negative.
   se = sqrt(var)
 
   # 3. Calculate the probability using the normal distribution.
-  # TODO: could we use RI or something else as another way to generate the p-value?
+  # TODO: could we use RI or something else as another way to generate the p-value? E.g. pass in permutations
   p_value = 2*pnorm(-abs(estimate/se))
 
   # Return the results.

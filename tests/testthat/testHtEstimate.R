@@ -262,6 +262,9 @@ result
 # Check for symmetry in the covariance matrix.
 isSymmetric(result$covariances)
 
+# Compare to sharp null results.
+htestimate(ex$data$y, assignment, contrasts=contrasts, prob_matrix, approx="sharp null")
+
 
 ## Replicating table 2.
 
