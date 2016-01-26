@@ -24,6 +24,8 @@ library(dplyr) # Used in htEstimate for the cluster aggregation.
 #' perms = ri::genperms(z, maxiter=10000)
 #' prob_matrix = createProbMatrix(perms)
 #'
+
+
 createProbMatrix = function(assignments, byrow = F) {
   # Return a n * k by n * k matrix.
 
@@ -66,41 +68,16 @@ createProbMatrix = function(assignments, byrow = F) {
     # TODO: add a test case to confirm that this check works.
   }
 
-  # Matrix to store the results. Initialize all cells to NA so that we can see errors for easily.
-  result = matrix(nrow = n*k, ncol=n*k)
-  #cat("Result dimensions:", n*k, "by", n*k, "\n")
+  # Create the stacked indicator matrices.
+  stacked_inds = matrix(nrow = n*k, ncol = ncol(assignments))
 
-  # Create the diagonals and lower triangle.
-  # We start at the top-left diagonal and work down the column.
-  for (col in 1:k) {
-    for (row in col:k) {
-      dest = getRawMatrixEntries(row, col, n)
-      #cat("Start row:", start_row, "End row:", end_row, "Start col:", start_col, "End col:", end_col, "\n")
-      probs = generateAssignmentProbs(row, col, assignments)
-      #print(probs)
-      result[dest$start_row:dest$end_row, dest$start_col:dest$end_col] = probs
-    }
+  for (assign in 1:k) {
+    indicator_matrix = as.numeric(assignments == assign)
+    stacked_inds[(n*(assign-1)+1):(n*assign), ] = indicator_matrix
   }
 
-  # Copy lower triangle to the upper triangle.
-  for (col in 2:k) {
-    for (row in seq(1, col-1)) {
-
-      # Target is the matrix in the lower triangle that we're copying from.
-      target = getRawMatrixEntries(col, row, n)
-      #cat("Copying target:\n")
-      #with(target, cat("Row:", col, "Col:", row, "Start row:", start_row, "End row:", end_row, "Start col:", start_col, "End col:", end_col, "\n"))
-
-      targetMat = result[target$start_row:target$end_row, target$start_col:target$end_col]
-      #print(targetMat)
-
-      # Destination is the matrix in the upper triangle.
-      dest = getRawMatrixEntries(row, col, n)
-
-      # TODO: determine if we should be transposing the targetMat here.
-      result[dest$start_row:dest$end_row, dest$start_col:dest$end_col] = t(targetMat)
-    }
-  }
+  # Use the stacked indicator matrices to calculate the probability matrix.
+  result = stacked_inds %*% t(stacked_inds) / ncol(assignments)
 
   # Return the result.
   return(result)
