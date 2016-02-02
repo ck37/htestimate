@@ -271,7 +271,7 @@ htestimate(ex$data$y, assignment, contrasts=contrasts, prob_matrix, approx="shar
 # Expected value of estimate, should be 0 per table 2, p. 149 of CUE.
 estimates = sapply(results, FUN=function(x){ x$estimate })
 mean(estimates)
-# Standard error of delta from the paper (first SE row in table 2).
+# Standard error of delta from the paper (first SE row in table 2, under "HT" column).
 sqrt(sum((estimates - mean(estimates))^2)/length(estimates))
 # This does match the table's result.
 
@@ -283,8 +283,7 @@ errors = sapply(results, FUN=function(x){ x$std_err })
 sum(is.na(errors))
 
 # This version gives us the expectation of the estimated variance.
-# TOFIX: we have to remove NAs right now, but this shouldn't be necessary.
-mean(errors^2, na.rm=T)
+mean(errors^2)
 sum((errors - mean(errors))^2)/length(errors)
 
 # TODO: clean up test.
