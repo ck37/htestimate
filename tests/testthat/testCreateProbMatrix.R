@@ -82,10 +82,10 @@ ex = test_example_cue_table1()
 
 # Review the Pi_1i's by cluster - probability of being assigned treatment.
 # These should be 0.5 for the first 4 clusters then 0.333 for the last 6.
-apply(ex$cluster_perms, MARGIN=1, FUN=function(x){ mean(x == "treatment") })
+#apply(ex$cluster_perms, MARGIN=1, FUN=function(x){ mean(x == "treatment") })
 
 # We expect and do get 90 unique possible assignments.
-dim(ex$cluster_perms)
+#dim(ex$cluster_perms)
 
 # We should have a 16x90 matrix of assignment permutations at the unit level.
 dim(ex$assign_perms)
@@ -117,3 +117,31 @@ test_that("Estimated probabilities of control assignment are correct.", {
 
 # Clean up test.
 rm(prob_matrix, ex)
+
+context("createProbMatrix - assignment strings")
+
+assignments = c("con", "TRT")
+# Units in the RCT:
+n = 10
+# Probability of treatment assignment:
+p = 0.5
+# How many units to allocation to each assignment level.
+counts = c(control=NA, treat=round(n*p))
+counts[1] = n - counts[2]
+counts
+
+# Create the box.
+box = rep(assignments, times = counts)
+table(box)
+
+# Total possible random assignments
+total_permutes = choose(n, counts[1])
+total_permutes
+
+set.seed(1)
+n_reps = 10
+perms = replicate(n_reps, sample(box, length(box), replace=F))
+perms
+
+prob_matrix = createProbMatrix(perms)
+prob_matrix
