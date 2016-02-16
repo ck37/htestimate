@@ -121,11 +121,16 @@ assignment = z_ck
 contrasts = c(-1, 1)
 totals = F
 table(assignment)
+
 # This version manually converts the assignment levels to natural numbers, i.e. 1 and 2.
 result = htestimate(y, z_ck, contrasts = contrasts, prob_matrix = prob_matrix)
 result
+
 # Check for symmetry in the covariance matrix.
 isSymmetric(result$covariances)
+
+# We are getting slightly different estimate results, but this is due to the # of permutations being small.
+result$estimate == ri_ate
 
 # This version keeps the original 0, 1 assignment levels.
 result2 = htestimate(y, Z, contrasts = contrasts, prob_matrix = prob_matrix2)
@@ -154,8 +159,7 @@ result4
 # Check for symmetry in the covariance matrix.
 isSymmetric(result4$covariances)
 
-# We are getting slightly different estimate results, but this is due to the # of permutations being small.
-result$estimate == ri_ate
+
 
 # Try with 100k perms
 perms_100k = genperms(Z, maxiter=100000)
@@ -180,7 +184,53 @@ test_that("htestimate - Ex2: replicate results from RI package (no clustering or
 
 
 ####################
-# Test 3. Compare to the RI package example, this time with clustering and blocking:
+# Test 3. Compare to the RI package, with example data from Joel.
+Z = c(0,0,1,1,0,0,1,1,0,0)
+y = c(2,2,1,0,2,2,2,0,0,0)
+block = c(rep(1,4), rep(2,6))
+N = 10  # Dealing with cluster totals so N greater than M
+perms = genperms(Z, blockvar=block)
+dim(perms)
+
+probs = genprobexact(Z, blockvar=block)
+probs
+
+prob_matrix = createProbMatrix(perms)
+dim(prob_matrix)
+
+# Test createProbMatrix using matrix manipulations.
+
+# Create a stacked matrix of indicators for each assignment level.
+# First indicators for control, then indicators for treatment.
+tmp = rbind(1 - perms, perms)
+tmpprob = tmp %*% t(tmp) / ncol(perms)
+# Should get 400 TRUEs.
+table(tmpprob == prob_matrix)
+
+# Get sharp null sd using matrix operations.
+ylong = c(-y ,y)
+# diag(diag(x)) extracts the diagonal entries and then converts back to square matrix where
+# non-diagonal entries are 0.
+yexp = solve(diag(diag(tmpprob))) %*% ylong
+sdest_sn = sqrt(sum(t(yexp) %*% tmpprob %*% yexp) / N^2)
+sdest_sn
+
+# Compare to ri package results under the sharp null.
+Ys = genouts(y, Z, ate=0) # generate potential outcomes under sharp null of no effect
+ate = estate(y, Z, prob=probs)
+distout = gendist(Ys, perms, prob=probs, HT=T) # generate sampling dist. under sharp null
+ri_result = dispdist(distout, ate)
+
+# Check if they are within 2 * epsilon, which should return true.
+abs(sdest_sn - ri_result$sd) <= .Machine$double.eps * 2
+# This shows that the matrix manipulation and ri software generate the correct result.
+
+# Now compare to htestimate.
+ht = htestimate(y, Z, contrasts = c(-1, 1), prob_matrix, approx = "sharp null")
+ht
+
+####################
+# Test 4. Compare to the RI package example, this time with clustering and blocking:
 y = c(8,6,2,0,3,1,1,1,2,2,0,1,0,2,2,4,1,1)
 Z = c(1,1,0,0,1,1,0,0,1,1,1,1,0,0,1,1,0,0)
 cluster = c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9)
@@ -215,7 +265,7 @@ htestimate(y, Z, contrasts = c(-1, 1), prob_matrix, approx = "sharp null")
 # TODO: Check that the Totals estimation is correct.
 
 #################
-# Test 4. CUE example (table 1, p. 147), WITH blocking AND clustering.
+# Test 5. CUE example (table 1, p. 147), WITH blocking AND clustering.
 context("htestimate - CUE table 1")
 ex = test_example_cue_table1()
 
