@@ -337,3 +337,60 @@ mean(errors^2)
 sum((errors - mean(errors))^2)/length(errors)
 
 # TODO: clean up test.
+
+context("htestimate - rerandomization 1")
+
+# Simulate a sample dataset with 1 covariate and 1 outcome.
+n = 20
+set.seed(1)
+# x1 is our observed covariate.
+x1 = runif(n)
+summary(x1)
+# U1 is an unobserved variable.
+u1 = rexp(n)
+# E is our random error.
+e = rnorm(n)
+# t is our treatment effect.
+t = 2
+y0 = x1 + 2 * u1 + e
+# Constant treatment effect:
+y1 = y0 + t
+
+data = data.frame(x1, u1, y0, y1)
+
+# How many units to allocation to each assignment level.
+
+# Generate randomization distribution
+perms = simple_rct(20, 0.5)
+
+# Analyze balance based on the x1 variable.
+rand_analyzed = analyze_randomizations(perms, data.frame(data[, "x1"]))
+
+rand_f0.2 = restrict_randomizations(rand_analyzed, 0.2)
+rand_f0.9 = restrict_randomizations(rand_analyzed, 0.9)
+
+rownames(rand_analyzed)
+
+dim(rand_analyzed)
+rownames(rand_analyzed)
+summary(rand_analyzed["f_p", ])
+summary(rand_analyzed["r_sqr", ])
+
+table(rand_analyzed["keep", ])
+prop.table(table(rand_analyzed["keep", ]))
+# Look at the distribution of r_squared for keep vs discard.
+tapply(rand_analyzed["f_p", ], rand_analyzed["keep", ], FUN=summary)
+
+# Select which randomization permutations we want to keep.
+perms_restricted = perms[, as.logical(rand_analyzed["keep", ])]
+dim(perms_restricted)
+
+# Choose one permutation to be "observed".
+prob_matrix = createProbMatrix(perms_restricted)
+prob_matrix
+
+prob_matrix = createProbMatrix(perms)
+prob_matrix
+# The diagonal is in theory 0.5, but we see some finite sample variance.
+mean(diag(prob_matrix))
+sd(diag(prob_matrix))
