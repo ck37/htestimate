@@ -79,6 +79,18 @@ createProbMatrix = function(assignments, byrow = F) {
   # Use the stacked indicator matrices to calculate the probability matrix.
   result = stacked_inds %*% t(stacked_inds) / ncol(assignments)
 
+  # Label the rows and columns based on the raw assignment labels (or codes if there are no labels).
+
+  # Column name should be: [assign col]_[obs #]
+  col_names = paste(rep(paste(assignment_levels), each=n), 1:n, sep="_")
+  stopifnot(length(col_names) == ncol(result))
+  colnames(result) = col_names
+  # Row name should be: [assign row]_[obs #]
+  row_names = paste(rep(paste(assignment_levels), each=n), 1:n, sep="_")
+  stopifnot(length(row_names) == nrow(result))
+  rownames(result) = row_names
+
+
   # Return the result.
   return(result)
 }
