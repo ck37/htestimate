@@ -122,7 +122,7 @@ context("createProbMatrix - assignment strings")
 
 assignments = c("con", "TRT")
 # Units in the RCT:
-n = 10
+n = 6
 # Probability of treatment assignment:
 p = 0.5
 # How many units to allocation to each assignment level.
@@ -139,7 +139,7 @@ total_permutes = choose(n, counts[1])
 total_permutes
 
 set.seed(1)
-n_reps = 10
+n_reps = 1000
 perms = replicate(n_reps, sample(box, length(box), replace=F))
 perms
 
