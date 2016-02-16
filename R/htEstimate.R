@@ -599,3 +599,55 @@ test_example_cue_table1 = function() {
 
 # New function to randomly permute assignments within blocks, after aggregating to cluster totals.
 # Or do randomizr, blockTools, or ri (et al?) already provide this functionality?
+
+
+# Examine balance in a set of randomization permutations.
+analyze_randomizations = function(permutations, covariates) {
+  # TODO: parallelize
+  results = apply(perms, covariates, MARGIN=2, FUN = function(assignment, data) {
+    # Conduct a balance test.
+    #TODO: multinomial logit for > 2 treatment arms.
+    reg = lm(assignment ~ ., data=data)
+    reg_sum = summary(reg)
+    f_stat = reg_sum$fstatistic
+    # Calculate the p-value of the f-statistic, which doesn't seem otherwise extractable.
+    f_p = pf(f_stat[1L], f_stat[2L], f_stat[3L], lower.tail = FALSE)
+    names(f_p) = NULL
+    r_sqr = reg_sum$r.squared
+    #keep_randomization = as.numeric(f_p >= f_p_cutoff)
+    #results = c(keep=keep_randomization, f_p=f_p, r_sqr=r_sqr)
+    results = c(f_p=f_p, r_sqr=r_sqr)
+    results
+  })
+  results
+}
+
+# Create a randomization distribution for a simple RCT with a certain treatment probability.
+simple_rct = function(sample_size, treatment_prob, assignments = c(0, 1)) {
+  counts = c(control=NA, treat=round(sample_size * treatment_prob))
+  counts[1] = n - counts[2]
+  counts
+  # Create the box.
+  box = rep(assignments, times = counts)
+  table(box)
+
+  num_perms = choose(sample_size, counts[1])
+  cat("Total permutations:", prettyNum(num_perms, big.mark=","), "\n")
+  # Generate the permutations.
+  # TODO: suppress message about too many permutations.
+  capture.output({
+    perms = genperms(box)
+  })
+  if (ncol(perms) < num_perms) {
+    cat("Switched to approximation. Sampled permutations:", prettyNum(ncol(perms), big.mark=",")
+        , "\n")
+  }
+  return(perms)
+}
+
+# Restrict our randomizations to those with balance test p-value above a threshold.
+restrict_randomizations = function(analyzed_rand_perms, f_p_threshold) {
+  keep = c(keep=analyzed_rand_perms["f_p", ] >= f_p_threshold)
+  rand_analyzed = rbind(analyzed_rand_perms, keep)
+  return(rand_analyzed)
+}
