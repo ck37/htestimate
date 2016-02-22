@@ -366,10 +366,11 @@ perms = simple_rct(20, 0.5)
 # Analyze balance based on the x1 variable.
 rand_analyzed = analyze_randomizations(perms, data.frame(data[, "x1"]))
 
+rownames(rand_analyzed)
+
 rand_f0.2 = restrict_randomizations(rand_analyzed, 0.2)
 rand_f0.9 = restrict_randomizations(rand_analyzed, 0.9)
 
-rownames(rand_analyzed)
 
 dim(rand_analyzed)
 rownames(rand_analyzed)
@@ -394,3 +395,39 @@ prob_matrix
 # The diagonal is in theory 0.5, but we see some finite sample variance.
 mean(diag(prob_matrix))
 sd(diag(prob_matrix))
+
+# Ratio of the variances of two designs.
+#
+context("joel - test case 1")
+
+Z<-c(0,0,1,1,0,0,1,1,0,0)
+y<-c(2,2,1,0,2,2,2,0,0,0)
+block<-c(rep(1,4), rep(2,6))
+N<-10 #dealing with cluster totals so N greater than M
+perms<-genperms(Z, blockvar=block)
+probs<-genprobexact(Z,blockvar=block)
+
+#test Chris' software
+prob_matrix<-createProbMatrix(perms)
+
+#test createProbMatrix
+tmp<-rbind(1-perms,perms)
+tmpprob<-tmp%*%t(tmp)/ncol(perms)
+table(tmpprob==prob_matrix)
+
+#get sharp null sd using matrix operations
+ylong<-c(-y,y)
+# y_expanded = y over the probabilities (P^-1 * Y).
+yexp = solve(diag(diag(tmpprob))) %*% ylong
+sdest_sn<-sqrt(sum(t(yexp) %*% tmpprob %*% yexp)/N^2)
+sdest_sn
+
+
+#exactly same as Peter's software under sharp null
+Ys <- genouts(y,Z,ate=0) # generate potential outcomes under sharp null of no effect
+ate<-estate(y,Z, prob=probs)
+ate
+distout <- gendist(Ys,perms, prob=probs, HT=T) # generate sampling dist. under sharp null
+dispdist(distout, ate)
+# Compare to htestimate:
+htestimate(y, Z, contrasts = c(-1, 1), prob_matrix=prob_matrix, approx="sharp null",  totals=F)
