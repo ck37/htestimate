@@ -411,23 +411,31 @@ probs<-genprobexact(Z,blockvar=block)
 prob_matrix<-createProbMatrix(perms)
 
 #test createProbMatrix
-tmp<-rbind(1-perms,perms)
-tmpprob<-tmp%*%t(tmp)/ncol(perms)
-table(tmpprob==prob_matrix)
+# stacked_assignment_indicators
+stacked_assign_ind = rbind(1 - perms, perms)
+tmp_prob = stacked_assign_ind %*% t(stacked_assign_ind) / ncol(perms)
+table(tmp_prob == prob_matrix)
 
-#get sharp null sd using matrix operations
-ylong<-c(-y,y)
-# y_expanded = y over the probabilities (P^-1 * Y).
-yexp = solve(diag(diag(tmpprob))) %*% ylong
-sdest_sn<-sqrt(sum(t(yexp) %*% tmpprob %*% yexp)/N^2)
+## get sharp null sd using matrix operations
+# Y_long encodes the contrasts.
+# Y_long = contrasts * rep(y, length(contrasts))
+y_long = c(-y, y)
+
+# y_expanded = y over the probabilities (diag(P^-1) * Y_long).
+y_exp = solve(diag(diag(tmp_prob))) %*% y_long
+
+# y_exp^t P y_exp = (diag(P^-1) y_long)^T P (diag(P^-1) y_long)
+# The sum converts a 1x1 matrix to a scalar.
+sdest_sn = sqrt(sum(t(y_exp) %*% tmp_prob %*% y_exp) / N^2)
 sdest_sn
 
-
-#exactly same as Peter's software under sharp null
-Ys <- genouts(y,Z,ate=0) # generate potential outcomes under sharp null of no effect
-ate<-estate(y,Z, prob=probs)
+# Exactly same as Peter's software under sharp null
+# Generate potential outcomes under sharp null of no effect
+Ys = genouts(y, Z, ate=0)
+ate = estate(y, Z, prob=probs)
 ate
-distout <- gendist(Ys,perms, prob=probs, HT=T) # generate sampling dist. under sharp null
+distout <- gendist(Ys, perms, prob=probs, HT=T) # generate sampling dist. under sharp null
 dispdist(distout, ate)
-# Compare to htestimate:
-htestimate(y, Z, contrasts = c(-1, 1), prob_matrix=prob_matrix, approx="sharp null",  totals=F)
+# Compare to htestimate (result is wrong :/)
+ht = htestimate(y, Z, contrasts = c(-1, 1), prob_matrix=prob_matrix, approx="sharp null",  totals=F)
+ht$std_err

@@ -324,7 +324,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # 2. Calculate the SE.
 
-  # Calculate all needed covarianaces - we will use a weighted sum of their totals.
+  # Calculate all needed covariances - we will use a weighted sum of their totals.
 
   # If we assume constant effects we need to calculate potential outcomes for each outcome and assignment pair.
   if (approx %in%  c("constant effects", "sharp null")) {
@@ -332,6 +332,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     potential_outcomes = matrix(nrow=n, ncol=k)
 
     # Loop over each unit and assignment.
+    # TODO: convert to matrix calculations.
     for (unit_i in 1:n) {
       for (assign_a in 1:k) {
         # Use the observed value if it exists or if we're using the sharp null.
@@ -348,6 +349,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
       }
     }
     rm(temp_outcome)
+  } else {
+    # We don't use this, but want to be able to include the variable in the returned results.
+    potential_outcomes = NA
   }
 
 
@@ -556,6 +560,22 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
     }
   }
 
+  # Implement Joel's matrix formula, generalized to multiple treatments.
+  # TODO: expand to also work for constant treatment effects
+  if (approx == "sharp null") {
+    # NOTE: we could stack our potential outcome matrix here.
+    y_long = rep(contrasts, each=length(outcome)) * rep(outcome, length(contrasts))
+    # We're basically doing: y_long = c(-y, y)
+
+    # y_expanded = y over the probabilities (diag(P^-1) * Y_long).
+    y_exp = solve(diag(diag(prob_matrix))) %*% y_long
+
+    # y_exp^t P y_exp = (diag(P^-1) y_long)^T P (diag(P^-1) y_long)
+    # The sum converts a 1x1 matrix to a scalar.
+    sdest_sn = sqrt(sum(t(y_exp) %*% prob_matrix %*% y_exp) / n^2)
+    sdest_sn
+  }
+
   # Divide by n^2 if we're not calculating the VAR of totals.
   if (!totals) {
      var = var / n^2
@@ -563,6 +583,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # This will give a NaN if the estimated variance is negative.
   se = sqrt(var)
+  if (approx == "sharp null") {
+    se = sdest_sn
+  }
 
   # 3. Calculate the probability using the normal distribution.
   # TODO: could we use RI or something else as another way to generate the p-value? E.g. pass in permutations
@@ -570,7 +593,9 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix, approx = "you
 
   # Return the results.
   # We include the variances, covariances, and outcome totals for debugging purposes only.
-  result = list(estimate=estimate, std_err=se, p_value=p_value, covariances=cov_combined, totals=outcome_totals)
+  result = list(estimate=estimate, std_err=se, p_value=p_value,
+                covariances=cov_combined, totals=outcome_totals,
+                potential_outcomes = potential_outcomes)
   return(result)
 }
 
