@@ -185,6 +185,7 @@ test_that("htestimate - Ex2: replicate results from RI package (no clustering or
 
 ####################
 # Test 3. Compare to the RI package, with example data from Joel.
+context("htestimate - test 3 RI package sharp null")
 Z = c(0,0,1,1,0,0,1,1,0,0)
 y = c(2,2,1,0,2,2,2,0,0,0)
 block = c(rep(1,4), rep(2,6))
@@ -377,13 +378,13 @@ rownames(rand_analyzed)
 summary(rand_analyzed["f_p", ])
 summary(rand_analyzed["r_sqr", ])
 
-table(rand_analyzed["keep", ])
-prop.table(table(rand_analyzed["keep", ]))
+table(rand_f0.2["keep", ])
+prop.table(table(rand_f0.2["keep", ]))
 # Look at the distribution of r_squared for keep vs discard.
-tapply(rand_analyzed["f_p", ], rand_analyzed["keep", ], FUN=summary)
+tapply(rand_f0.2["f_p", ], rand_f0.2["keep", ], FUN=summary)
 
 # Select which randomization permutations we want to keep.
-perms_restricted = perms[, as.logical(rand_analyzed["keep", ])]
+perms_restricted = perms[, as.logical(rand_f0.2["keep", ])]
 dim(perms_restricted)
 
 # Choose one permutation to be "observed".
@@ -398,17 +399,19 @@ sd(diag(prob_matrix))
 
 # Ratio of the variances of two designs.
 #
-context("joel - test case 1")
 
-Z<-c(0,0,1,1,0,0,1,1,0,0)
-y<-c(2,2,1,0,2,2,2,0,0,0)
-block<-c(rep(1,4), rep(2,6))
-N<-10 #dealing with cluster totals so N greater than M
-perms<-genperms(Z, blockvar=block)
-probs<-genprobexact(Z,blockvar=block)
+
+context("joel - test case 1 sharp null")
+
+Z = c(0,0,1,1,0,0,1,1,0,0)
+y = c(2,2,1,0,2,2,2,0,0,0)
+block = c(rep(1,4), rep(2,6))
+N = 10 #dealing with cluster totals so N greater than M
+perms = genperms(Z, blockvar=block)
+probs = genprobexact(Z, blockvar=block)
 
 #test Chris' software
-prob_matrix<-createProbMatrix(perms)
+prob_matrix = createProbMatrix(perms)
 
 #test createProbMatrix
 # stacked_assignment_indicators
@@ -434,8 +437,14 @@ sdest_sn
 Ys = genouts(y, Z, ate=0)
 ate = estate(y, Z, prob=probs)
 ate
-distout <- gendist(Ys, perms, prob=probs, HT=T) # generate sampling dist. under sharp null
-dispdist(distout, ate)
-# Compare to htestimate (result is wrong :/)
+distout = gendist(Ys, perms, prob=probs, HT=T) # generate sampling dist. under sharp null
+ri_result = dispdist(distout, ate)
+ri_result
+
+# Compare to htestimate (result is correct!)
 ht = htestimate(y, Z, contrasts = c(-1, 1), prob_matrix=prob_matrix, approx="sharp null",  totals=F)
 ht$std_err
+
+test_that("htestimate - joel sharp null: replicate RI package.", {
+  expect_lte(abs(ht$std_err - ri_result$sd), .Machine$double.eps * 2)
+})
