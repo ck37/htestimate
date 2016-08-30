@@ -11,7 +11,8 @@ URL: http://github.com/ck37/htestimate
 License: BSD
 LazyData: true
 Imports:
-    dplyr
+    dplyr,
+    foreach
 Suggests:
     crank,
     ri,

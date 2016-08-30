@@ -356,20 +356,23 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix,
     potential_outcomes = NA
   }
 
-  # Setup parallelism. Thanks to Jeremy Coyle's origami package for this approach.
-  `%do_op%` = foreach::`%do%`
-  # Use parallelism if there is a backend registered, unless parallel == F.
-  if (foreach::getDoParRegistered() && parallel) {
-    `%do_op%` = foreach::`%dopar%`
-    if (verbose) cat("Parallel backend detected: using foreach parallelization.\n")
-  } else {
-    if (verbose) cat("No parallel backend detected. Operating sequentially.\n")
-  }
+
 
   # TODO: create cov_combined for all types of approximation.
   cov_combined = NA
 
   if (approx == "constant") {
+
+    # Setup parallelism. Thanks to Jeremy Coyle's origami package for this approach.
+    `%do_op%` = foreach::`%do%`
+    # Use parallelism if there is a backend registered, unless parallel == F.
+    if (foreach::getDoParRegistered() && parallel) {
+      `%do_op%` = foreach::`%dopar%`
+      if (verbose) cat("Parallel backend detected: using foreach parallelization.\n")
+    } else {
+      if (verbose) cat("No parallel backend detected. Operating sequentially.\n")
+    }
+
     # CUEATE#32: Loop over each assignment level and calculate the variance of the total.
     # TODO: generalize EQ#32 to multiple treatment arms for reference.
     variance_of_totals = rep(NA, k)
