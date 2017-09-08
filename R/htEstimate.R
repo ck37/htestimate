@@ -215,7 +215,7 @@ htestimate = function(outcome, assignment, contrasts, prob_matrix,
   # TODO: create cov_combined for all types of approximation.
   cov_combined = NA
 
-  if (approx == "constant") {
+  if (approx == "constant effects") {
 
     # Setup parallelism. Thanks to Jeremy Coyle's origami package for this approach.
     `%do_op%` = foreach::`%do%`
